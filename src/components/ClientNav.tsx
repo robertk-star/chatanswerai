@@ -3,6 +3,7 @@ import Link from "next/link";
 const clientLinks = [
   { href: "/client", label: "Dashboard" },
   { href: "/client/settings", label: "Settings" },
+  { href: "/client/faqs", label: "FAQs" },
   { href: "/client/account", label: "Account" },
 ];
 
