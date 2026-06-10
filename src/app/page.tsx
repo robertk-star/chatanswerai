@@ -78,9 +78,8 @@ export default function HomePage() {
               Turn more website visitors into service inquiries.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-              Generic Business Chat answers visitor questions, uses
-              business-specific FAQs, opens a service inquiry form, and sends
-              leads to your team.
+              Chat Answer AI answers visitor questions, uses business-specific
+              FAQs, opens a service inquiry form, and sends leads to your team.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
@@ -244,7 +243,7 @@ export default function HomePage() {
       <section className="bg-amber-50">
         <div className="mx-auto max-w-4xl px-6 py-16 text-center">
           <h2 className="text-4xl font-black text-navy">
-            Ready to test Generic Business Chat?
+            Ready to test Chat Answer AI?
           </h2>
           <p className="mt-4 text-lg leading-8 text-slate-600">
             Start with one business, configure the knowledge settings, and
