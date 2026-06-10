@@ -90,6 +90,7 @@ const apiRouteFileChecks = [
   { route: "/api/admin/system/health", file: "src/app/api/admin/system/health/route.ts", type: "api" },
   { route: "/api/admin/businesses/[id]", file: "src/app/api/admin/businesses/[id]/route.ts", type: "dynamic" },
   { route: "/api/admin/onboarding", file: "src/app/api/admin/onboarding/route.ts", type: "api" },
+  { route: "/api/admin/faqs", file: "src/app/api/admin/faqs/route.ts", type: "api" },
   { route: "/api/admin/sites", file: "src/app/api/admin/sites/route.ts", type: "api" },
   { route: "/api/admin/sites/[id]", file: "src/app/api/admin/sites/[id]/route.ts", type: "dynamic" },
   { route: "/api/admin/clients", file: "src/app/api/admin/clients/route.ts", type: "api" },
@@ -165,17 +166,48 @@ function routeCheck(item: { route: string; file: string; type: string }): Health
   };
 }
 
+function envValuePreview(name: string) {
+  const value = process.env[name];
+  if (!value) return "Not set";
+  if (name.includes("KEY") || name.includes("SECRET") || name.includes("PASSWORD")) {
+    return `Set (${value.length} characters)`;
+  }
+  return value;
+}
+
+function formatSupabaseError(error: any) {
+  if (!error) return "Unknown Supabase error";
+
+  const pieces = [
+    error.message,
+    error.code ? `code: ${error.code}` : "",
+    error.details ? `details: ${error.details}` : "",
+    error.hint ? `hint: ${error.hint}` : "",
+  ].filter(Boolean);
+
+  if (pieces.length) return pieces.join(" | ");
+
+  try {
+    const json = JSON.stringify(error);
+    if (json && json !== "{}") return json;
+  } catch {}
+
+  return "Supabase returned an error object without a message. Check the service-role key, project URL, and whether the project is paused.";
+}
+
 export async function getSystemHealth(): Promise<SystemHealth> {
   const envItems: HealthItem[] = [
     ...requiredEnv.map((name) => ({
       name,
       status: process.env[name] ? "ok" as const : "error" as const,
       message: process.env[name] ? "Configured" : "Missing required environment variable",
+      detail: envValuePreview(name),
     })),
     ...optionalEnv.map((name) => ({
       name,
       status: process.env[name] ? "ok" as const : "warning" as const,
       message: process.env[name] ? "Configured" : "Optional but not configured",
+      detail: envValuePreview(name),
     })),
   ];
 
@@ -184,23 +216,32 @@ export async function getSystemHealth(): Promise<SystemHealth> {
 
   if (!supabase) {
     for (const table of tableChecks) {
-      tableItems.push({ name: table, status: "error", message: "Supabase admin client is not configured" });
+      tableItems.push({
+        name: table,
+        status: "error",
+        message: "Supabase admin client is not configured",
+        detail: "NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing at runtime",
+      });
     }
   } else {
     for (const table of tableChecks) {
       try {
-        const { error, count } = await supabase.from(table).select("*", { count: "exact", head: true });
+        const { error, count } = await supabase
+          .from(table)
+          .select("id", { count: "exact", head: true });
+
         tableItems.push({
           name: table,
           status: error ? "error" : "ok",
-          message: error ? error.message : "Reachable",
-          detail: error ? undefined : `Rows: ${count ?? "unknown"}`,
+          message: error ? formatSupabaseError(error) : "Reachable",
+          detail: error ? formatSupabaseError(error) : `Rows: ${count ?? "unknown"}`,
         });
       } catch (error) {
         tableItems.push({
           name: table,
           status: "error",
           message: error instanceof Error ? error.message : "Unknown table check error",
+          detail: error instanceof Error ? error.stack?.slice(0, 500) : String(error),
         });
       }
     }
