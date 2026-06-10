@@ -6,6 +6,11 @@ import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Client FAQs | Chat Answer AI" };
 
+const csvTemplate = `Question,Answer
+"What services do you offer?","We offer [list your services here]."
+"What areas do you serve?","We serve [list your service area here]."
+"How can I get started?","Send a service inquiry and our team will follow up."`;
+
 type ClientFaqSearchParams = {
   saved?: string;
   error?: string;
@@ -82,6 +87,43 @@ export default async function ClientFaqsPage({
         )}
 
         <div className="rounded-[2rem] bg-white p-6 shadow-soft ring-1 ring-slate-200">
+          <h2 className="text-xl font-bold text-navy">Import FAQs</h2>
+          <p className="mt-1 text-sm leading-6 text-slate-500">
+            Download the CSV template, fill in your questions and answers, then paste the rows below. You can also paste tab-separated questions and answers from a spreadsheet.
+          </p>
+
+          <div className="mt-4 flex flex-wrap gap-3">
+            <a
+              href={`data:text/csv;charset=utf-8,${encodeURIComponent(csvTemplate)}`}
+              download="chat-answer-ai-faq-template.csv"
+              className="rounded-full border border-slate-300 px-5 py-2 text-sm font-bold text-navy"
+            >
+              Download CSV Template
+            </a>
+          </div>
+
+          <form action="/api/client/faqs" method="post" className="mt-5 grid gap-4">
+            <input type="hidden" name="action" value="import" />
+            <label className="block text-sm font-semibold text-slate-700">
+              Paste FAQs to Import
+              <textarea
+                name="bulk_faqs"
+                placeholder={'Question,Answer\n"What services do you offer?","We offer..."\n"What areas do you serve?","We serve..."'}
+                className="mt-1 min-h-40 w-full rounded-xl border border-slate-300 px-4 py-3 font-mono text-sm"
+              />
+            </label>
+            <p className="text-xs leading-5 text-slate-500">
+              Format: one FAQ per line. Use <strong>Question, Answer</strong> or paste two columns from a spreadsheet. Imports add to your current FAQs and do not delete existing ones.
+            </p>
+            <div>
+              <button type="submit" className="rounded-full bg-gold px-6 py-3 text-sm font-black text-navy">
+                Import FAQs
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div className="rounded-[2rem] bg-white p-6 shadow-soft ring-1 ring-slate-200">
           <h2 className="text-xl font-bold text-navy">Add a FAQ for {businessName}</h2>
           <p className="mt-1 text-sm leading-6 text-slate-500">
             Add approved question-and-answer pairs. The AI checks these business FAQs before using general fallback answers.
@@ -130,7 +172,7 @@ export default async function ClientFaqsPage({
 
           {managedFaqs.length === 0 ? (
             <div className="mt-6 rounded-2xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">
-              No FAQs have been added yet. Add your first FAQ above.
+              No FAQs have been added yet. Add your first FAQ above or import several FAQs at once.
             </div>
           ) : (
             <div className="mt-6 space-y-4">
