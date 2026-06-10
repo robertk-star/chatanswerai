@@ -76,6 +76,33 @@ async function makeUniqueBusinessSlug(supabase: any, baseSlug: string) {
   return `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+async function saveBusinessSettings(
+  supabase: any,
+  businessId: string,
+  settingsPayload: Record<string, unknown>,
+) {
+  const { data: existing, error: lookupError } = await supabase
+    .from("business_settings")
+    .select("id")
+    .eq("business_id", businessId)
+    .maybeSingle();
+
+  if (lookupError) return lookupError;
+
+  if (existing?.id) {
+    const { error } = await supabase
+      .from("business_settings")
+      .update(settingsPayload)
+      .eq("id", existing.id);
+    return error;
+  }
+
+  const { error } = await supabase
+    .from("business_settings")
+    .insert(settingsPayload);
+  return error;
+}
+
 export async function POST(request: Request) {
   const cookieStore = await cookies();
   const token = cookieStore.get(adminCookieName())?.value;
@@ -174,48 +201,49 @@ export async function POST(request: Request) {
 
   if (siteError) return fail(request, "site_create_failed", siteError);
 
-  const { error: settingsError } = await supabase
-    .from("business_settings")
-    .upsert(
-      {
-        business_id: businessId,
-        singleton_key: businessId,
-        business_name: businessName,
-        website,
-        phone,
-        email,
-        primary_market: primaryMarket,
-        business_type: businessType,
-        business_description: description,
-        description,
-        services_offered: servicesOffered,
-        services_not_offered: servicesNotOffered,
-        service_area: serviceArea,
-        target_customer: targetCustomer,
-        custom_ai_instructions:
-          customAiInstructions ||
-          "Answer questions helpfully using the business settings and FAQs. If unsure, do not guess. Invite the visitor to send a service inquiry when appropriate.",
-        important_disclaimers_or_limits: importantDisclaimersOrLimits,
-        lead_notification_email: value(formData, "lead_notification_email"),
-        widget_title:
-          value(formData, "widget_title") || "Service Inquiry Assistant",
-        widget_subtitle:
-          value(formData, "widget_subtitle") ||
-          "Answers questions and collects service inquiries",
-        widget_bubble_text: "Questions? Chat with us",
-        widget_quote_button_text:
-          value(formData, "widget_quote_button_text") || "Request Information",
-        widget_success_message:
-          "Thanks. Your information was received. Someone from the team can review the details and follow up.",
-        widget_header_color: "#0f172a",
-        widget_button_color: "#f5b51b",
-        widget_show_call_button: true,
-        widget_call_button_text: "Call Now",
-        widget_allowed_domains: allowedDomains,
-        updated_at: now,
-      },
-      { onConflict: "business_id" },
-    );
+  const settingsPayload = {
+    business_id: businessId,
+    singleton_key: businessId,
+    business_name: businessName,
+    website,
+    phone,
+    email,
+    primary_market: primaryMarket,
+    business_type: businessType,
+    business_description: description,
+    description,
+    services_offered: servicesOffered,
+    services_not_offered: servicesNotOffered,
+    service_area: serviceArea,
+    target_customer: targetCustomer,
+    custom_ai_instructions:
+      customAiInstructions ||
+      "Answer questions helpfully using the business settings and FAQs. If unsure, do not guess. Invite the visitor to send a service inquiry when appropriate.",
+    important_disclaimers_or_limits: importantDisclaimersOrLimits,
+    lead_notification_email: value(formData, "lead_notification_email"),
+    widget_title:
+      value(formData, "widget_title") || "Service Inquiry Assistant",
+    widget_subtitle:
+      value(formData, "widget_subtitle") ||
+      "Answers questions and collects service inquiries",
+    widget_bubble_text: "Questions? Chat with us",
+    widget_quote_button_text:
+      value(formData, "widget_quote_button_text") || "Request Information",
+    widget_success_message:
+      "Thanks. Your information was received. Someone from the team can review the details and follow up.",
+    widget_header_color: "#0f172a",
+    widget_button_color: "#f5b51b",
+    widget_show_call_button: true,
+    widget_call_button_text: "Call Now",
+    widget_allowed_domains: allowedDomains,
+    updated_at: now,
+  };
+
+  const settingsError = await saveBusinessSettings(
+    supabase,
+    businessId,
+    settingsPayload,
+  );
 
   if (settingsError)
     return fail(request, "settings_create_failed", settingsError);
