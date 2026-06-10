@@ -5,7 +5,7 @@ export function PublicSiteHeader() {
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         <Link href="/" className="text-xl font-black tracking-tight text-navy">
-          Chat Answer AI
+          ChatarAI
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-bold text-slate-600 md:flex">
