@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ClientNav } from "@/components/ClientNav";
 import { clientCookieName, verifyClientSessionToken } from "@/lib/clientAuth";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
@@ -70,11 +69,6 @@ export default async function ClientFaqsPage({
 
   return (
     <main className="min-h-screen bg-slate-50">
-      <ClientNav
-        title="FAQs"
-        subtitle="Add and manage the answers Chat Answer AI should use for your business."
-      />
-
       <section className="mx-auto max-w-5xl space-y-6 px-6 py-8">
         {savedMessage && (
           <div className="rounded-2xl bg-green-50 p-4 text-sm font-semibold text-green-800">
