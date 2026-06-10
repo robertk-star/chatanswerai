@@ -4,7 +4,7 @@ import "./globals.css";
 import { PortalRouteNav } from "@/components/PortalRouteNav";
 
 export const metadata: Metadata = {
-  title: "Chat Answer AI",
+  title: "ChatarAI",
   description: "AI lead-capture chat assistant for service-business websites.",
 };
 
@@ -19,7 +19,7 @@ export default function RootLayout({
         <PortalRouteNav />
         {children}
         <Script
-          src="https://chatanswerai.vercel.app/widget.js?v=send-green-canonical-api-20260607a"
+          src="https://www.chatarai.com/widget.js?v=chatarai-canonical-20260610a"
           data-site-id="caai"
           strategy="afterInteractive"
         />
