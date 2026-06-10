@@ -5,6 +5,7 @@ import { clientCookieName, verifyClientSessionToken } from "@/lib/clientAuth";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildWidgetEmbedCode } from "@/lib/widgetEmbed";
 import { maxWidgetSitesForPlan, planDescription, planLabel } from "@/lib/planLimits";
+import { CopyEmbedButton } from "@/components/CopyEmbedButton";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Widget Sites | ChatAnswerAI" };
@@ -171,6 +172,7 @@ export default async function ClientSitesPage({
 
           {sites.map((site) => {
             const label = siteLabel(site);
+            const embedCode = buildWidgetEmbedCode(site.site_id);
             return (
               <div key={site.id} className="rounded-[2rem] bg-white p-6 shadow-soft ring-1 ring-slate-200">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -196,8 +198,11 @@ export default async function ClientSitesPage({
                 </div>
 
                 <div className="mt-5">
-                  <div className="text-sm font-bold text-slate-700">Embed code</div>
-                  <pre className="mt-2 overflow-x-auto rounded-xl bg-slate-50 p-4 text-xs text-slate-700">{buildWidgetEmbedCode(site.site_id)}</pre>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="text-sm font-bold text-slate-700">Embed code</div>
+                    <CopyEmbedButton value={embedCode} />
+                  </div>
+                  <pre className="mt-2 overflow-x-auto rounded-xl bg-slate-50 p-4 text-xs text-slate-700">{embedCode}</pre>
                 </div>
 
                 <div className="mt-5 flex flex-wrap gap-3">
