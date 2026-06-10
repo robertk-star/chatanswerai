@@ -2,7 +2,7 @@ import { createHmac } from "crypto";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 export type LeadWebhookPayload = {
-  event: "seller_lead.created" | "seller_lead.test";
+  event: "lead.created" | "lead.test" | "seller_lead.created" | "seller_lead.test";
   sentAt: string;
   businessId: string | null;
   siteId: string | null;
@@ -13,6 +13,10 @@ export type LeadWebhookPayload = {
     name?: string | null;
     phone?: string | null;
     email?: string | null;
+    company?: string | null;
+    serviceNeeded?: string | null;
+    message?: string | null;
+    preferredTimeline?: string | null;
     propertyAddress?: string | null;
     propertyCity?: string | null;
     situation?: string | null;
@@ -64,7 +68,7 @@ export async function getBusinessWebhookSettings(businessId?: string | null): Pr
 
 export function buildLeadWebhookPayload(
   lead: any,
-  event: LeadWebhookPayload["event"] = "seller_lead.created"
+  event: LeadWebhookPayload["event"] = "lead.created"
 ): LeadWebhookPayload {
   return {
     event,
@@ -78,6 +82,10 @@ export function buildLeadWebhookPayload(
       name: lead.name || null,
       phone: lead.phone || null,
       email: lead.email || null,
+      company: lead.company || null,
+      serviceNeeded: lead.service_needed || lead.situation || null,
+      message: lead.message || lead.notes || null,
+      preferredTimeline: lead.preferred_timeline || lead.timeline || null,
       propertyAddress: lead.property_address || null,
       propertyCity: lead.property_city || null,
       situation: lead.situation || null,
@@ -116,11 +124,14 @@ export async function sendLeadWebhookForBusiness({
   const body = JSON.stringify(payload);
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "User-Agent": "CashOfferChat-Webhook/1.0",
+    "User-Agent": "ChatAnswerAI-Webhook/1.0",
   };
 
   if (settings.webhook_secret) {
-    headers["X-CashOfferChat-Signature"] = signPayload(body, settings.webhook_secret);
+    const signature = signPayload(body, settings.webhook_secret);
+    headers["X-ChatAnswerAI-Signature"] = signature;
+    // Keep the legacy signature header during the CashOfferChat-to-ChatAnswerAI transition.
+    headers["X-CashOfferChat-Signature"] = signature;
   }
 
   try {
