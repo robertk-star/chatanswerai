@@ -73,7 +73,7 @@ function defaultSettings(siteId: string) {
   return {
     siteId,
     businessId: null,
-    businessName: "Generic Business Chat",
+    businessName: "Chat Answer AI",
     businessPhone: "",
     businessType: "General Service Business",
     businessDescription: "",
