@@ -3,8 +3,8 @@ import { PublicSiteHeader } from "@/components/PublicSiteHeader";
 import { PublicSiteFooter } from "@/components/PublicSiteFooter";
 
 export const metadata = {
-  title: "Pricing | ChatAnswerAI",
-  description: "Simple ChatAnswerAI pricing for cash home buyer websites.",
+  title: "Pricing | Chat Answer AI",
+  description: "Simple Chat Answer AI pricing for service-business websites.",
 };
 
 const plans = [
@@ -13,16 +13,16 @@ const plans = [
     name: "Starter",
     price: "$49/mo",
     badge: "Best for one website",
-    description: "For a cash home buyer who wants the widget on one website.",
+    description: "For a service business that wants the widget on one website.",
     features: [
       "1 widget site",
       "Everything included",
-      "AI seller Q&A",
-      "Structured quote form",
+      "AI visitor Q&A",
+      "Structured service inquiry form",
       "Lead dashboard",
       "Email lead notifications",
       "Widget title, subtitle, colors, and phone display controls",
-      "Top 100 seller FAQ library",
+      "Business-specific FAQ and knowledge settings",
     ],
   },
   {
@@ -30,7 +30,7 @@ const plans = [
     name: "Pro",
     price: "$99/mo",
     badge: "Best for multiple sites",
-    description: "For buyers or agencies managing more than one website/account.",
+    description: "For businesses or agencies managing more than one website/account.",
     features: [
       "Up to 4 widget sites/accounts",
       "Everything in Starter",
@@ -39,7 +39,7 @@ const plans = [
       "Business-specific settings",
       "Lead dashboard and email notifications",
       "FAQ and widget customization",
-      "Good fit for multiple markets or demo/client sites",
+      "Good fit for multiple locations, brands, or client sites",
     ],
   },
 ];
@@ -55,7 +55,7 @@ export default function PricingPage() {
           </div>
           <h1 className="text-5xl font-black text-navy">Two plans. Everything included.</h1>
           <p className="mt-5 text-lg leading-8 text-slate-600">
-            ChatAnswerAI is built for cash home buyer websites. Pick Starter for one site or Pro if you need multiple sites/accounts.
+            Chat Answer AI is built for service-business websites. Pick Starter for one site or Pro if you need multiple sites/accounts.
           </p>
         </div>
 
