@@ -1,4 +1,4 @@
--- CashOfferChat Phase 2H: widget branding, CTA, phone, and allowed-domain settings
+-- ChatAnswerAI Phase 2H: widget branding, CTA, phone, and allowed-domain settings
 -- Run this after sql/006_plano_demo_defaults.sql.
 
 alter table public.business_settings
@@ -26,5 +26,5 @@ set
   widget_call_button_text = coalesce(nullif(widget_call_button_text, ''), 'Call Now'),
   widget_allowed_domains = coalesce(nullif(widget_allowed_domains, ''), 'sellmyhousetodayanywhere.com
 www.sellmyhousetodayanywhere.com
-cashofferchat.com')
+chatanswerai.com')
 where singleton_key = 'default';

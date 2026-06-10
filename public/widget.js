@@ -1,14 +1,14 @@
 (() => {
-  if (window.__genericBusinessChatLoaded) return;
-  window.__genericBusinessChatLoaded = true;
+  if (window.__chatAnswerAiWidgetLoaded) return;
+  window.__chatAnswerAiWidgetLoaded = true;
 
   const script = document.currentScript;
   const siteId = script?.getAttribute("data-site-id") || "demo";
-  const baseUrl = "https://www.cashofferchat.com";
+  const baseUrl = "https://www.chatanswerai.com";
   const sourceUrl = window.location.href;
   const sourceDomain = window.location.hostname;
-  window.CASHOFFERCHAT_WIDGET_VERSION = "generic-business-foundation-20260610a";
-  window.CASHOFFERCHAT_WIDGET_API_BASE = baseUrl;
+  window.CHATANSWERAI_WIDGET_VERSION = "generic-business-foundation-20260610a";
+  window.CHATANSWERAI_WIDGET_API_BASE = baseUrl;
 
   const DEFAULT_SETTINGS = {
     widgetTitle: "Service Inquiry Assistant",

@@ -5,7 +5,7 @@ import { clientCookieName, verifyClientSessionToken } from "@/lib/clientAuth";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Integrations | CashOfferChat" };
+export const metadata = { title: "Integrations | ChatAnswerAI" };
 
 export default async function ClientIntegrationsPage({
   searchParams,
@@ -87,7 +87,7 @@ export default async function ClientIntegrationsPage({
                 className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3"
               />
               <span className="mt-1 block text-xs text-slate-500">
-                Optional. If set, CashOfferChat sends an X-CashOfferChat-Signature header.
+                Optional. If set, ChatAnswerAI sends an X-ChatAnswerAI-Signature header.
               </span>
             </label>
 

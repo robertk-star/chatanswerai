@@ -59,19 +59,19 @@ function getAppUrl() {
   const rawUrl =
     process.env.APP_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
-    "https://www.cashofferchat.com";
+    "https://www.chatanswerai.com";
 
   try {
     const parsed = new URL(rawUrl);
     if (
-      parsed.hostname === "cashofferchat.com" ||
-      parsed.hostname === "www.cashofferchat.com"
+      parsed.hostname === "chatanswerai.com" ||
+      parsed.hostname === "www.chatanswerai.com"
     ) {
-      return "https://www.cashofferchat.com";
+      return "https://www.chatanswerai.com";
     }
     return parsed.origin;
   } catch {
-    return "https://www.cashofferchat.com";
+    return "https://www.chatanswerai.com";
   }
 }
 
@@ -181,7 +181,7 @@ export async function sendLeadEmailNotification({
 }): Promise<NotificationResult> {
   const resendApiKey = process.env.RESEND_API_KEY;
   const fromEmail =
-    process.env.FROM_EMAIL || "CashOfferChat <leads@cashofferchat.com>";
+    process.env.FROM_EMAIL || "Chat Answer AI <leads@chatanswerai.com>";
 
   const recipients = await getLeadNotificationRecipients(
     supabase,

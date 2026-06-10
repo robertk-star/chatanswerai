@@ -42,7 +42,7 @@ async function sendRequestEmail({
   business: string;
 }) {
   const resendApiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.FROM_EMAIL || "CashOfferChat <leads@cashofferchat.com>";
+  const fromEmail = process.env.FROM_EMAIL || "ChatAnswerAI <leads@chatanswerai.com>";
   const recipients = splitEmails(process.env.SALES_REQUEST_EMAIL || process.env.LEAD_NOTIFICATION_EMAIL);
 
   if (!resendApiKey || recipients.length === 0) return;
@@ -70,8 +70,8 @@ async function sendRequestEmail({
     body: JSON.stringify({
       from: fromEmail,
       to: recipients,
-      subject: `CashOfferChat ${safePlan} request: ${email}`,
-      html: `<div style="font-family:Arial,sans-serif;background:#f8fafc;padding:24px;color:#0f172a;"><div style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;"><div style="background:#0f172a;color:#ffffff;padding:22px 24px;"><h1 style="margin:0;font-size:22px;line-height:1.3;">New CashOfferChat Pricing Request</h1><p style="margin:8px 0 0;color:#cbd5e1;">Stripe placeholder form</p></div><div style="padding:24px;"><table style="border-collapse:collapse;width:100%;font-size:14px;">${htmlRows}</table></div></div></div>`,
+      subject: `ChatAnswerAI ${safePlan} request: ${email}`,
+      html: `<div style="font-family:Arial,sans-serif;background:#f8fafc;padding:24px;color:#0f172a;"><div style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;"><div style="background:#0f172a;color:#ffffff;padding:22px 24px;"><h1 style="margin:0;font-size:22px;line-height:1.3;">New ChatAnswerAI Pricing Request</h1><p style="margin:8px 0 0;color:#cbd5e1;">Stripe placeholder form</p></div><div style="padding:24px;"><table style="border-collapse:collapse;width:100%;font-size:14px;">${htmlRows}</table></div></div></div>`,
       text: rows.map(([label, rowValue]) => `${label}: ${rowValue}`).join("\n"),
     }),
   });

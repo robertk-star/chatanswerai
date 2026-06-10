@@ -298,7 +298,7 @@ async function resolveBusinessContext(
   const fallback: BusinessContext = {
     businessId: null,
     siteId: siteId || null,
-    businessName: "CashOfferChat",
+    businessName: "ChatAnswerAI",
     phone: "",
     primaryMarket: "",
     businessType: "General Service Business",

@@ -89,7 +89,7 @@ export function PortalRouteNav() {
 
   const links = isAdminRoute ? adminLinks : clientLinks;
   const logoutAction = isAdminRoute ? "/api/admin/logout" : "/api/client/logout";
-  const label = isAdminRoute ? "CashOfferChat Admin" : "CashOfferChat Client Portal";
+  const label = isAdminRoute ? "Chat Answer AI Admin" : "Chat Answer AI Client Portal";
   const homeHref = isAdminRoute ? "/admin" : "/client";
   const homeLabel = isAdminRoute ? "Back to Admin Dashboard" : "Back to Client Dashboard";
 

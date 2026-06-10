@@ -5,7 +5,7 @@ import { adminCookieName, verifyAdminSessionToken } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Admin Lead Detail | CashOfferChat" };
+export const metadata = { title: "Admin Lead Detail | ChatAnswerAI" };
 
 const statuses = [
   ["new", "New"],

@@ -1,4 +1,4 @@
--- CashOfferChat Phase 1 schema
+-- ChatAnswerAI Phase 1 schema
 -- Run this in the Supabase SQL editor before testing chat/lead storage.
 
 create extension if not exists pgcrypto;

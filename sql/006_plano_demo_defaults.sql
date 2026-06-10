@@ -1,4 +1,4 @@
--- CashOfferChat Phase 2G Plano demo defaults
+-- ChatAnswerAI Phase 2G Plano demo defaults
 -- Run this after sql/005_managed_faq_settings.sql if the project was previously seeded with Austin demo settings.
 
 update public.business_settings

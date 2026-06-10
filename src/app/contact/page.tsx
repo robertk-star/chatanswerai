@@ -2,8 +2,8 @@ import { PublicSiteHeader } from "@/components/PublicSiteHeader";
 import { PublicSiteFooter } from "@/components/PublicSiteFooter";
 
 export const metadata = {
-  title: "Contact | CashOfferChat",
-  description: "Request early access to CashOfferChat.",
+  title: "Contact | ChatAnswerAI",
+  description: "Request early access to ChatAnswerAI.",
 };
 
 export default function ContactPage() {
@@ -15,7 +15,7 @@ export default function ContactPage() {
         <div>
           <h1 className="text-5xl font-black text-navy">Request early access.</h1>
           <p className="mt-5 text-lg leading-8 text-slate-600">
-            CashOfferChat is being prepared for cash home buyers who want better seller lead capture from their existing websites.
+            ChatAnswerAI is being prepared for cash home buyers who want better seller lead capture from their existing websites.
           </p>
 
           <div className="mt-8 rounded-[2rem] bg-slate-50 p-6 ring-1 ring-slate-200">

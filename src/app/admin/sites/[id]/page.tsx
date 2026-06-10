@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildWidgetEmbedCode } from "@/lib/widgetEmbed";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Widget Site Detail | CashOfferChat" };
+export const metadata = { title: "Widget Site Detail | ChatAnswerAI" };
 
 export default async function AdminSiteDetailPage({
   params,

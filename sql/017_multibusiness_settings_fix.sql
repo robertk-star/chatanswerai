@@ -1,4 +1,4 @@
--- CashOfferChat Hotfix: business_settings multi-business support
+-- ChatAnswerAI Hotfix: business_settings multi-business support
 -- Fixes old singleton constraint from single-business demo stage.
 
 create extension if not exists pgcrypto;

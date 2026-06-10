@@ -3,8 +3,8 @@ import { PublicSiteHeader } from "@/components/PublicSiteHeader";
 import { PublicSiteFooter } from "@/components/PublicSiteFooter";
 
 export const metadata = {
-  title: "Request Received | CashOfferChat",
-  description: "Your CashOfferChat request was received.",
+  title: "Request Received | ChatAnswerAI",
+  description: "Your ChatAnswerAI request was received.",
 };
 
 const planLabels: Record<string, string> = {

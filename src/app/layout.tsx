@@ -3,8 +3,8 @@ import "./globals.css";
 import { PortalRouteNav } from "@/components/PortalRouteNav";
 
 export const metadata: Metadata = {
-  title: "CashOfferChat",
-  description: "AI seller intake assistant for cash home buyer websites.",
+  title: "Chat Answer AI",
+  description: "AI lead-capture chat assistant for service-business websites.",
 };
 
 export default function RootLayout({

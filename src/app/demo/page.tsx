@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Live Demo | CashOfferChat",
-  description: "View the live CashOfferChat demo site.",
+  title: "Live Demo | ChatAnswerAI",
+  description: "View the live ChatAnswerAI demo site.",
 };
 
 export default function DemoPage() {

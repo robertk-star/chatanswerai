@@ -1,4 +1,4 @@
--- CashOfferChat Phase 3E repair: ensure businesses table has all expected columns
+-- ChatAnswerAI Phase 3E repair: ensure businesses table has all expected columns
 
 create extension if not exists pgcrypto;
 

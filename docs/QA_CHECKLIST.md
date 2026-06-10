@@ -1,4 +1,4 @@
-# CashOfferChat QA Checklist
+# ChatAnswerAI QA Checklist
 
 Use this after major deploys.
 

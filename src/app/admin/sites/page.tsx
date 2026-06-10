@@ -7,7 +7,7 @@ import { buildWidgetEmbedCode } from "@/lib/widgetEmbed";
 import { maxWidgetSitesForPlan, planLabel } from "@/lib/planLimits";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Widget Sites | CashOfferChat" };
+export const metadata = { title: "Widget Sites | ChatAnswerAI" };
 
 type Business = {
   id: string;

@@ -5,7 +5,7 @@ import { adminCookieName, verifyAdminSessionToken } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Client Users | CashOfferChat" };
+export const metadata = { title: "Client Users | ChatAnswerAI" };
 
 function getBusinessName(value: any) {
   if (!value) return "—";

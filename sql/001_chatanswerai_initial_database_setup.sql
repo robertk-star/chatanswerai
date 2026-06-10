@@ -883,9 +883,9 @@ alter table public.businesses
 
 
 -- ============================================================
--- Generic Business Chat Foundation Fields
+-- Chat Answer AI Foundation Fields
 -- ============================================================
--- Generic Business Chat Phase 1 Foundation
+-- Chat Answer AI Phase 1 Foundation
 -- Adds generic business knowledge fields and generic lead fields while keeping
 -- legacy internal table names are kept for Phase 1 code compatibility.
 

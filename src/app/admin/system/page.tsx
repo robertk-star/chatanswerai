@@ -5,7 +5,7 @@ import { AdminNav } from "@/components/AdminNav";
 import { getSystemHealth, type HealthItem } from "@/lib/systemHealth";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "System Health | CashOfferChat" };
+export const metadata = { title: "System Health | ChatAnswerAI" };
 
 function StatusBadge({ status }: { status: HealthItem["status"] }) {
   const classes =

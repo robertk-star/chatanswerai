@@ -7,7 +7,7 @@ import { buildWidgetEmbedCode } from "@/lib/widgetEmbed";
 import { maxWidgetSitesForPlan, planDescription, planLabel } from "@/lib/planLimits";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Widget Sites | CashOfferChat" };
+export const metadata = { title: "Widget Sites | ChatAnswerAI" };
 
 function siteLabel(site: any) {
   return site.site_name || site.name || site.site_id || "Widget Site";
@@ -122,7 +122,7 @@ export default async function ClientSitesPage({
               <li>Paste it before the closing <code className="rounded bg-slate-100 px-1">body</code> tag on your website.</li>
               <li>Open your website in a private/incognito browser window.</li>
               <li>Open the chat bubble and submit a test lead.</li>
-              <li>Confirm the lead appears in your CashOfferChat dashboard.</li>
+              <li>Confirm the lead appears in your ChatAnswerAI dashboard.</li>
             </ol>
           </div>
         </div>

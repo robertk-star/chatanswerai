@@ -1,4 +1,4 @@
--- CashOfferChat Phase 3E repair: ensure businesses.slug exists and is populated
+-- ChatAnswerAI Phase 3E repair: ensure businesses.slug exists and is populated
 
 alter table public.businesses
   add column if not exists slug text;

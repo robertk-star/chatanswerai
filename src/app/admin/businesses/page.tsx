@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { planLabel } from "@/lib/planLimits";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Businesses | CashOfferChat" };
+export const metadata = { title: "Businesses | ChatAnswerAI" };
 
 type Business = {
   id: string;

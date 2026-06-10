@@ -3,8 +3,8 @@ import { PublicSiteHeader } from "@/components/PublicSiteHeader";
 import { PublicSiteFooter } from "@/components/PublicSiteFooter";
 
 export const metadata = {
-  title: "Pricing | CashOfferChat",
-  description: "Simple CashOfferChat pricing for cash home buyer websites.",
+  title: "Pricing | ChatAnswerAI",
+  description: "Simple ChatAnswerAI pricing for cash home buyer websites.",
 };
 
 const plans = [
@@ -55,7 +55,7 @@ export default function PricingPage() {
           </div>
           <h1 className="text-5xl font-black text-navy">Two plans. Everything included.</h1>
           <p className="mt-5 text-lg leading-8 text-slate-600">
-            CashOfferChat is built for cash home buyer websites. Pick Starter for one site or Pro if you need multiple sites/accounts.
+            ChatAnswerAI is built for cash home buyer websites. Pick Starter for one site or Pro if you need multiple sites/accounts.
           </p>
         </div>
 

@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { buildWidgetEmbedCode } from "@/lib/widgetEmbed";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Widget Site Settings | CashOfferChat" };
+export const metadata = { title: "Widget Site Settings | ChatAnswerAI" };
 
 function siteLabel(site: any) {
   return site.site_name || site.name || site.site_id || "Widget Site";
@@ -187,7 +187,7 @@ export default async function ClientSiteDetailPage({
                 <li>Open the website in a private/incognito window.</li>
                 <li>Open the chat bubble.</li>
                 <li>Submit a test quote request.</li>
-                <li>Confirm the test lead appears in CashOfferChat.</li>
+                <li>Confirm the test lead appears in ChatAnswerAI.</li>
               </ol>
             </div>
           </div>

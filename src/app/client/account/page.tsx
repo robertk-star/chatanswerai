@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { clientCookieName, verifyClientSessionToken } from "@/lib/clientAuth";
 
-export const metadata = { title: "Client Account | CashOfferChat" };
+export const metadata = { title: "Client Account | ChatAnswerAI" };
 
 export default async function ClientAccountPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string }> }) {
   const query = await searchParams;

@@ -5,7 +5,7 @@ import { clientCookieName, verifyClientSessionToken } from "@/lib/clientAuth";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Client Settings | CashOfferChat" };
+export const metadata = { title: "Client Settings | ChatAnswerAI" };
 
 const BUSINESS_TYPE_OPTIONS = [
   "General Service Business",

@@ -1,4 +1,4 @@
--- CashOfferChat Phase 3M: Webhook / CRM integrations
+-- ChatAnswerAI Phase 3M: Webhook / CRM integrations
 
 alter table public.business_settings
   add column if not exists webhook_enabled boolean not null default false,

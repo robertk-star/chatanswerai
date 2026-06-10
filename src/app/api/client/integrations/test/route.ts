@@ -27,8 +27,8 @@ export async function POST(request: Request) {
       situation: "Testing webhook delivery",
       timeline: "ASAP",
       property_condition: "Test condition",
-      notes: "This is a CashOfferChat test webhook.",
-      source_url: "https://cashofferchat.com/client/integrations",
+      notes: "This is a ChatAnswerAI test webhook.",
+      source_url: "https://chatanswerai.com/client/integrations",
     },
     "seller_lead.test"
   );

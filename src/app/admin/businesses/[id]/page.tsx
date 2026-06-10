@@ -12,7 +12,7 @@ import {
 } from "@/lib/planLimits";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Business Detail | CashOfferChat" };
+export const metadata = { title: "Business Detail | ChatAnswerAI" };
 
 export default async function AdminBusinessDetailPage({
   params,

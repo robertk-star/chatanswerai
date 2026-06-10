@@ -5,7 +5,7 @@ import { clientCookieName, verifyClientSessionToken } from "@/lib/clientAuth";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Client Lead Detail | CashOfferChat" };
+export const metadata = { title: "Client Lead Detail | ChatAnswerAI" };
 
 const statuses = [
   ["new", "New"],

@@ -1,4 +1,4 @@
--- CashOfferChat Phase 18: widget color text controls
+-- ChatAnswerAI Phase 18: widget color text controls
 -- Adds separate font color controls for the widget header and quote button.
 
 alter table public.business_settings

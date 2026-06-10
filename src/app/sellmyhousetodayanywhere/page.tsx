@@ -3,7 +3,7 @@ import Script from "next/script";
 export const metadata = {
   title: "Sell My House Today Anywhere | Cash Home Buyer Demo",
   description:
-    "Need to sell your house fast? Sell My House Today Anywhere is a demo cash home buyer site for testing CashOfferChat seller intake.",
+    "Need to sell your house fast? Sell My House Today Anywhere is a demo cash home buyer site for testing ChatAnswerAI seller intake.",
 };
 
 const serviceAreas = [
@@ -70,7 +70,7 @@ function Footer() {
         <div>
           <div className="text-xl font-black">Sell My House Today Anywhere</div>
           <p className="mt-3 text-sm leading-6 text-slate-300">
-            Demo cash home buyer website powered by CashOfferChat.
+            Demo cash home buyer website powered by ChatAnswerAI.
           </p>
         </div>
         <div>
@@ -84,7 +84,7 @@ function Footer() {
         <div>
           <div className="font-black">Demo disclosure</div>
           <p className="mt-3 text-sm leading-6 text-slate-300">
-            This is a demonstration site for CashOfferChat. It does not make real property offers.
+            This is a demonstration site for ChatAnswerAI. It does not make real property offers.
           </p>
         </div>
       </div>
@@ -248,7 +248,7 @@ export default function SellMyHouseTodayAnywherePage() {
 
       <Footer />
 
-      <Script src="https://www.cashofferchat.com/widget.js?v=dynamic-settings-20260606b" strategy="afterInteractive" data-site-id="smhta" />
+      <Script src="https://www.chatanswerai.com/widget.js?v=dynamic-settings-20260606b" strategy="afterInteractive" data-site-id="smhta" />
     </main>
   );
 }

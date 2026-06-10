@@ -2,7 +2,7 @@
 
 Generic AI lead-capture chat widget for service businesses.
 
-This project is built from the CashOfferChat codebase as a separate product. It supports generic service businesses, background screening, home buyers, roofing, HVAC, plumbing, med spas, law firms, auto services, and other local service businesses.
+This project is built from the ChatAnswerAI codebase as a separate product. It supports generic service businesses, background screening, home buyers, roofing, HVAC, plumbing, med spas, law firms, auto services, and other local service businesses.
 
 ## Phase 1
 
@@ -27,7 +27,7 @@ For a new Chat Answer AI Supabase project, run:
 sql/001_chatanswerai_initial_database_setup.sql
 ```
 
-Do not treat this as a CashOfferChat migration.
+Do not treat this as a ChatAnswerAI migration.
 
 ## Vercel
 
@@ -39,4 +39,4 @@ Default build command:
 npm run build
 ```
 
-No new Vercel environment variables are required for Phase 1 beyond the variables already used by the CashOfferChat base.
+No new Vercel environment variables are required for Phase 1 beyond the variables already used by the ChatAnswerAI base.

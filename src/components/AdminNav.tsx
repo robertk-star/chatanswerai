@@ -18,7 +18,7 @@ export function AdminNav({ title, subtitle }: { title?: string; subtitle?: strin
       <div className="mx-auto max-w-7xl px-6 py-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <div className="text-xl font-bold text-navy">CashOfferChat Admin</div>
+            <div className="text-xl font-bold text-navy">Chat Answer AI Admin</div>
             {title && <h1 className="mt-2 text-2xl font-bold text-navy">{title}</h1>}
             {subtitle && <p className="text-sm text-slate-500">{subtitle}</p>}
           </div>

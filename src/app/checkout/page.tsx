@@ -3,8 +3,8 @@ import { PublicSiteHeader } from "@/components/PublicSiteHeader";
 import { PublicSiteFooter } from "@/components/PublicSiteFooter";
 
 export const metadata = {
-  title: "Start CashOfferChat | CashOfferChat",
-  description: "Enter your email to request access to CashOfferChat while billing is being set up.",
+  title: "Start ChatAnswerAI | ChatAnswerAI",
+  description: "Enter your email to request access to ChatAnswerAI while billing is being set up.",
 };
 
 const planDetails: Record<string, { name: string; price: string; limit: string; description: string }> = {
@@ -47,7 +47,7 @@ export default async function CheckoutPlaceholderPage({
           </div>
           <h1 className="text-5xl font-black text-navy">Request access to {plan.name}.</h1>
           <p className="mt-5 text-lg leading-8 text-slate-600">
-            Billing is not turned on yet. Enter your email and we will contact you to set up your CashOfferChat account manually.
+            Billing is not turned on yet. Enter your email and we will contact you to set up your ChatAnswerAI account manually.
           </p>
 
           <div className="mt-8 rounded-[2rem] bg-slate-50 p-6 ring-1 ring-slate-200">

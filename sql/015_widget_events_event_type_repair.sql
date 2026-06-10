@@ -1,4 +1,4 @@
--- CashOfferChat Phase 3J repair: widget_events event_type schema
+-- ChatAnswerAI Phase 3J repair: widget_events event_type schema
 -- Fixes: column widget_events.event_type does not exist
 
 create extension if not exists pgcrypto;

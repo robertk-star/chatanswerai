@@ -5,7 +5,7 @@ import { adminCookieName, verifyAdminSessionToken } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Client User Detail | CashOfferChat" };
+export const metadata = { title: "Client User Detail | ChatAnswerAI" };
 
 function formatDate(value?: string | null) {
   if (!value) return "—";

@@ -1,4 +1,4 @@
--- CashOfferChat Phase 2I widget analytics
+-- ChatAnswerAI Phase 2I widget analytics
 -- Run this after sql/007_widget_branding_settings.sql.
 
 create table if not exists public.widget_events (

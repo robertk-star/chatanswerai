@@ -1,4 +1,4 @@
--- CashOfferChat Phase 2B business settings and AI knowledge base
+-- ChatAnswerAI Phase 2B business settings and AI knowledge base
 -- Run this after sql/001_initial_schema.sql.
 
 create extension if not exists pgcrypto;

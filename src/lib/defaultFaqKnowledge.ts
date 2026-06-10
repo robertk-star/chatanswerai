@@ -5,7 +5,7 @@ export type DefaultFAQItem = {
   keywords: string[];
 };
 
-// Default CashOfferChat seller FAQ library.
+// Default ChatAnswerAI seller FAQ library.
 // These are used as the global fallback answer set when a business does not have
 // a more specific managed FAQ or custom Q&A match configured.
 // Updated with Robert's revised CTA-focused FAQ answers.

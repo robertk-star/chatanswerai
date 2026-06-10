@@ -162,7 +162,7 @@ export async function POST(request: Request) {
 
   // Webhook delivery is intentionally non-blocking for lead creation.
   try {
-    const payload = buildLeadWebhookPayload(lead, "lead.created");
+    const payload = buildLeadWebhookPayload(lead, "seller_lead.created");
     const webhookResult = await sendLeadWebhookForBusiness({
       businessId: lead.business_id,
       payload,

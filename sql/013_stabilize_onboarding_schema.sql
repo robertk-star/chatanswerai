@@ -1,4 +1,4 @@
--- CashOfferChat Phase 3E Stabilization
+-- ChatAnswerAI Phase 3E Stabilization
 -- This repair migration aligns key onboarding tables with current app expectations.
 
 create extension if not exists pgcrypto;

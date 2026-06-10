@@ -1,4 +1,4 @@
--- CashOfferChat Phase 3B: Client accounts + scoped dashboard
+-- ChatAnswerAI Phase 3B: Client accounts + scoped dashboard
 -- Run after prior migrations.
 
 create extension if not exists pgcrypto;

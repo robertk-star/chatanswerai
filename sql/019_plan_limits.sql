@@ -1,4 +1,4 @@
--- CashOfferChat Phase 19: Plan limits for multiple widget sites
+-- ChatAnswerAI Phase 19: Plan limits for multiple widget sites
 -- Safe to run more than once.
 
 alter table public.businesses

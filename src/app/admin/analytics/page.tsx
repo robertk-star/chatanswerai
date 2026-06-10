@@ -5,7 +5,7 @@ import { adminCookieName, verifyAdminSessionToken } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Analytics | CashOfferChat" };
+export const metadata = { title: "Analytics | ChatAnswerAI" };
 
 function countBy(rows: any[], key: string) {
   const counts: Record<string, number> = {};

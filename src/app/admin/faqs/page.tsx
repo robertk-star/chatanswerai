@@ -6,7 +6,7 @@ import { defaultFaqItems } from "@/lib/defaultFaqKnowledge";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "FAQs | CashOfferChat" };
+export const metadata = { title: "FAQs | ChatAnswerAI" };
 
 type Business = { id: string; name: string };
 

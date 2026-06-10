@@ -1,4 +1,4 @@
--- CashOfferChat Phase 2D lead notification fields
+-- ChatAnswerAI Phase 2D lead notification fields
 -- Run after sql/001_initial_schema.sql, sql/002_business_settings.sql, and sql/003_lead_management.sql.
 
 alter table public.seller_leads

@@ -1,4 +1,4 @@
--- CashOfferChat Phase 3A schema
+-- ChatAnswerAI Phase 3A schema
 -- Multi-company foundation for future SaaS accounts.
 -- Run after sql/008_widget_analytics.sql.
 
@@ -29,7 +29,7 @@ create table if not exists public.widget_sites (
 );
 
 insert into public.businesses (name, slug, owner_email, status, notes)
-values ('Sell My House Today Anywhere', 'sell-my-house-today-anywhere', null, 'active', 'Default demo business for CashOfferChat.')
+values ('Sell My House Today Anywhere', 'sell-my-house-today-anywhere', null, 'active', 'Default demo business for ChatAnswerAI.')
 on conflict (slug) do update set
   name = excluded.name,
   status = excluded.status,
@@ -42,7 +42,7 @@ select b.id,
        'sellmyhousetodayanywhere.com',
        'sellmyhousetodayanywhere.com
 www.sellmyhousetodayanywhere.com
-cashofferchat.com',
+chatanswerai.com',
        true,
        'Default demo widget site.'
 from public.businesses b

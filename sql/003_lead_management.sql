@@ -1,4 +1,4 @@
--- CashOfferChat Phase 2C lead management fields
+-- ChatAnswerAI Phase 2C lead management fields
 -- Run after sql/001_initial_schema.sql and sql/002_business_settings.sql.
 
 alter table public.seller_leads

@@ -18,7 +18,7 @@ const BUSINESS_TYPE_OPTIONS = [
   "Auto Services",
 ];
 
-export const metadata = { title: "Onboard Business | CashOfferChat" };
+export const metadata = { title: "Onboard Business | ChatAnswerAI" };
 
 function onboardingErrorMessage(code?: string, detail?: string) {
   const details = detail ? ` Details: ${detail}` : "";

@@ -15,7 +15,7 @@ export default async function AdminPage() {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <div>
-            <h1 className="text-2xl font-bold text-navy">CashOfferChat Admin</h1>
+            <h1 className="text-2xl font-bold text-navy">Chat Answer AI Admin</h1>
             <p className="text-sm text-slate-500">Master admin dashboard</p>
           </div>
           <form action="/api/admin/logout" method="post">

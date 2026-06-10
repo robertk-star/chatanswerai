@@ -1,7 +1,7 @@
--- Generic Business Chat Phase 1 Foundation
--- Run this after the existing CashOfferChat migrations.
+-- Chat Answer AI Phase 1 Foundation
+-- Run this after the existing ChatAnswerAI migrations.
 -- Adds generic business knowledge fields and generic lead fields while keeping
--- the existing CashOfferChat table names for backward compatibility.
+-- the existing ChatAnswerAI table names for backward compatibility.
 
 alter table public.business_settings
   add column if not exists business_type text default 'General Service Business',

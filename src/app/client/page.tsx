@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { ClientLeadExportButton } from "@/components/ClientLeadExportButton";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Client Dashboard | CashOfferChat" };
+export const metadata = { title: "Client Dashboard | ChatAnswerAI" };
 
 const statusOptions = [
   "all",
