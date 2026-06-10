@@ -6,7 +6,7 @@ export function PublicSiteFooter() {
       <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 md:grid-cols-4">
         <div className="md:col-span-2">
           <div className="text-xl font-black text-navy">
-            Chat Answer AI
+            ChatarAI
           </div>
           <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">
             AI-powered lead capture chat for service-business websites.
