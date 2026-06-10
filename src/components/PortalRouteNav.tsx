@@ -21,6 +21,7 @@ const clientLinks = [
   { href: "/client/analytics", label: "Analytics" },
   { href: "/client/integrations", label: "Integrations" },
   { href: "/client/settings", label: "Settings" },
+  { href: "/client/faqs", label: "FAQs" },
   { href: "/client/account", label: "Account" },
 ];
 
