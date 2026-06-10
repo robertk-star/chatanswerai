@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import { PortalRouteNav } from "@/components/PortalRouteNav";
 
@@ -17,6 +18,11 @@ export default function RootLayout({
       <body>
         <PortalRouteNav />
         {children}
+        <Script
+          src="https://chatanswerai.vercel.app/widget.js?v=send-green-canonical-api-20260607a"
+          data-site-id="caai"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
