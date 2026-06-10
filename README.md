@@ -1,4 +1,4 @@
-# ChatAnswerAI
+# Chat Answer AI
 
 Generic AI lead-capture chat widget for service businesses.
 
@@ -6,7 +6,7 @@ This project is built from the CashOfferChat codebase as a separate product. It 
 
 ## Phase 1
 
-Generic Business Chat Foundation:
+Chat Answer AI Foundation:
 
 - Business Type
 - Business Description
@@ -21,7 +21,7 @@ Generic Business Chat Foundation:
 
 ## Fresh Database Setup
 
-For a new ChatAnswerAI Supabase project, run:
+For a new Chat Answer AI Supabase project, run:
 
 ```text
 sql/001_chatanswerai_initial_database_setup.sql
