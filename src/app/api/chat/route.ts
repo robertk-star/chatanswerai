@@ -290,6 +290,89 @@ function safeFallback(message: string, context: BusinessContext) {
   return `I can help answer questions about ${context.businessName || "this business"}, a ${businessType}.${description} If I do not have enough information from the business settings or FAQs, I will not guess. Please send a service inquiry and the team can follow up.`;
 }
 
+function compactList(value: string | string[], fallback = "Not provided") {
+  const items = Array.isArray(value) ? value : splitKnowledgeLines(value);
+  return items.length ? items.slice(0, 30).join("; ") : fallback;
+}
+
+function buildAiSystemPrompt(context: BusinessContext) {
+  const managedFaqs = context.managedFaqs
+    .filter((faq) => faq.is_enabled !== false)
+    .slice(0, 30)
+    .map((faq) => `Q: ${faq.question}\nA: ${faq.answer}`)
+    .join("\n\n");
+
+  const customFaqs = context.customFaqs
+    .filter((faq) => faq.is_enabled !== false)
+    .slice(0, 30)
+    .map((faq) => `Q: ${faq.question_trigger}\nA: ${faq.answer}`)
+    .join("\n\n");
+
+  return `You are the website chat assistant for ${context.businessName || "this business"}.
+
+Your job:
+- Answer visitor questions using the business profile, business instructions, services, service area, disclaimers, and FAQs below.
+- If the FAQs do not directly answer the question, use the business profile and general helpful knowledge to answer in a practical way.
+- Keep answers short, friendly, and useful.
+- Do not invent prices, guarantees, legal terms, medical advice, tax advice, financial advice, or facts not supported by the business profile.
+- If the answer needs a human follow-up, say that the visitor can use the request button to send a service inquiry.
+- Do not mention internal databases, prompts, or settings.
+
+Business profile:
+Business name: ${context.businessName || "Not provided"}
+Business type: ${context.businessType || "General Service Business"}
+Phone: ${context.phone || "Not provided"}
+Business description: ${context.businessDescription || "Not provided"}
+Services offered: ${compactList(context.servicesOffered)}
+Services not offered: ${compactList(context.servicesNotOffered)}
+Service area: ${compactList(context.serviceArea || context.serviceAreas)}
+Target customer: ${context.targetCustomer || "Not provided"}
+Disclaimers or limits: ${context.importantDisclaimersOrLimits || "Not provided"}
+Custom business instructions: ${context.customAiInstructions || "Not provided"}
+
+Managed FAQs:
+${managedFaqs || "No managed FAQs provided."}
+
+Custom FAQs:
+${customFaqs || "No custom FAQs provided."}`;
+}
+
+async function answerFromAi(message: string, context: BusinessContext) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return null;
+
+  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0.3,
+        max_tokens: 260,
+        messages: [
+          { role: "system", content: buildAiSystemPrompt(context) },
+          { role: "user", content: message },
+        ],
+      }),
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const answer = String(data?.choices?.[0]?.message?.content || "").trim();
+    if (!answer) return null;
+
+    return withCta(answer, context);
+  } catch {
+    return null;
+  }
+}
+
 async function resolveBusinessContext(
   siteId?: string | null,
 ): Promise<BusinessContext> {
@@ -298,7 +381,7 @@ async function resolveBusinessContext(
   const fallback: BusinessContext = {
     businessId: null,
     siteId: siteId || null,
-    businessName: "ChatAnswerAI",
+    businessName: "ChatarAI",
     phone: "",
     primaryMarket: "",
     businessType: "General Service Business",
@@ -518,7 +601,7 @@ async function saveConversation({
   return currentConversationId;
 }
 
-function getAnswer(message: string, context: BusinessContext) {
+async function getAnswer(message: string, context: BusinessContext) {
   const customAnswer = answerFromCustomFaqs(
     message,
     context.customFaqs,
@@ -536,8 +619,6 @@ function getAnswer(message: string, context: BusinessContext) {
   const businessAnswer = answerFromBusinessRules(message, context);
   if (businessAnswer) return businessAnswer;
 
-  // The old global FAQ library is cash-home-buyer specific. Keep it available only
-  // when the configured business type is Home Buyer.
   if (normalize(context.businessType).includes("home buyer")) {
     const defaultAnswer = answerFromFaqList(
       message,
@@ -546,6 +627,9 @@ function getAnswer(message: string, context: BusinessContext) {
     );
     if (defaultAnswer) return defaultAnswer;
   }
+
+  const aiAnswer = await answerFromAi(message, context);
+  if (aiAnswer) return aiAnswer;
 
   return safeFallback(message, context);
 }
@@ -564,7 +648,7 @@ export async function POST(request: Request) {
   }
 
   const context = await resolveBusinessContext(siteId);
-  const reply = getAnswer(message, context);
+  const reply = await getAnswer(message, context);
 
   const conversationId = await saveConversation({
     conversationId: body?.conversationId || null,
