@@ -9,13 +9,20 @@ import {
 import { sendLeadEmailNotification } from "@/lib/leadEmailNotification";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, Accept, Origin",
+    "Access-Control-Max-Age": "86400",
+    "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
   };
+}
+
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return NextResponse.json(body, { status, headers: corsHeaders() });
 }
 
 export async function OPTIONS() {
@@ -80,127 +87,167 @@ function hasCustomFieldValue(customFields?: Record<string, any> | null) {
   return Object.values(customFields).some((value) => String(value || "").trim());
 }
 
-export async function POST(request: Request) {
-  const body = await request.json().catch(() => null);
-  const parsed = leadSchema.safeParse(body);
+function isMissingCustomFieldsColumn(error: any) {
+  const message = String(error?.message || "");
+  return message.includes("custom_fields") && message.includes("column");
+}
 
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.errors[0]?.message || "Invalid lead request" },
-      { status: 400, headers: corsHeaders() },
-    );
-  }
-
-  const data = parsed.data;
-  const customFields = data.customFields || {};
-
-  const hasUsefulLeadInfo = Boolean(
-    data.name ||
-      data.phone ||
-      data.email ||
-      data.company ||
-      data.serviceNeeded ||
-      data.message ||
-      data.propertyAddress ||
-      data.propertyCity ||
-      data.situation ||
-      data.notes ||
-      hasCustomFieldValue(customFields),
-  );
-
-  if (!hasUsefulLeadInfo) {
-    return NextResponse.json(
-      { error: "At least one lead field is required" },
-      { status: 400, headers: corsHeaders() },
-    );
-  }
-
-  const supabase = getSupabaseAdmin();
-
-  if (!supabase) {
-    return NextResponse.json(
-      { error: "Supabase is not configured" },
-      { status: 500, headers: corsHeaders() },
-    );
-  }
-
-  const [resolvedBusinessId, resolvedConversationId] = await Promise.all([
-    resolveBusinessId(supabase, data.siteId, data.businessId),
-    resolveConversationId(supabase, data.conversationId),
-  ]);
-
-  const insertPayload = {
-    conversation_id: resolvedConversationId,
-    business_id: resolvedBusinessId,
-    site_id: data.siteId || null,
-    status: "new",
-    name: data.name || customFields.name || "Not provided",
-    phone: data.phone || customFields.phone || "Not provided",
-    email: data.email || customFields.email || null,
-    company: data.company || customFields.company || null,
-    service_needed: data.serviceNeeded || customFields.service_needed || customFields.serviceNeeded || data.situation || null,
-    message: data.message || customFields.message || data.notes || null,
-    preferred_timeline: data.preferredTimeline || customFields.preferred_timeline || customFields.preferredTimeline || data.timeline || null,
-    property_address: data.propertyAddress || customFields.street_address || customFields.property_address || null,
-    property_city: data.propertyCity || customFields.city || customFields.property_city || null,
-    situation: data.situation || data.serviceNeeded || customFields.service_needed || customFields.serviceNeeded || null,
-    timeline: data.timeline || data.preferredTimeline || customFields.preferred_timeline || customFields.preferredTimeline || null,
-    property_condition: data.propertyCondition || customFields.property_condition || null,
-    notes: data.notes || data.message || customFields.message || null,
-    custom_fields: customFields,
-    source_url: data.sourceUrl || null,
-  };
-
-  const { data: lead, error } = await supabase
+async function insertLeadWithFallback(supabase: any, payload: Record<string, any>) {
+  const firstTry = await supabase
     .from("seller_leads")
-    .insert(insertPayload)
+    .insert(payload)
     .select("*")
     .single();
 
-  if (error || !lead) {
-    return NextResponse.json(
-      { error: error?.message || "Lead could not be saved" },
-      { status: 500, headers: corsHeaders() },
-    );
-  }
+  if (!firstTry.error || !isMissingCustomFieldsColumn(firstTry.error)) return firstTry;
 
+  const { custom_fields, ...safePayload } = payload;
+  return supabase.from("seller_leads").insert(safePayload).select("*").single();
+}
+
+export async function POST(request: Request) {
   try {
-    const emailResult = await sendLeadEmailNotification({ supabase, lead });
-    if (!emailResult.sent && !emailResult.skipped) {
-      console.error("Lead email notification failed", emailResult.error);
+    const body = await request.json().catch(() => null);
+    const parsed = leadSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return jsonResponse(
+        { error: parsed.error.errors[0]?.message || "Invalid lead request" },
+        400,
+      );
     }
-  } catch (emailError) {
-    console.error(
-      "Lead email notification failed",
-      emailError instanceof Error ? emailError.message : emailError,
+
+    const data = parsed.data;
+    const customFields = data.customFields || {};
+
+    const hasUsefulLeadInfo = Boolean(
+      data.name ||
+        data.phone ||
+        data.email ||
+        data.company ||
+        data.serviceNeeded ||
+        data.message ||
+        data.propertyAddress ||
+        data.propertyCity ||
+        data.situation ||
+        data.notes ||
+        hasCustomFieldValue(customFields),
     );
-  }
 
-  try {
-    const payload = buildLeadWebhookPayload(lead, "seller_lead.created");
-    const webhookResult = await sendLeadWebhookForBusiness({
-      businessId: lead.business_id,
-      payload,
-    });
+    if (!hasUsefulLeadInfo) {
+      return jsonResponse({ error: "At least one lead field is required" }, 400);
+    }
 
-    if (!webhookResult.skipped) {
-      await recordLeadWebhookResult(lead.id, {
-        sent: webhookResult.sent,
-        error: webhookResult.error,
+    const supabase = getSupabaseAdmin();
+
+    if (!supabase) {
+      return jsonResponse({ error: "Supabase is not configured" }, 500);
+    }
+
+    const [resolvedBusinessId, resolvedConversationId] = await Promise.all([
+      resolveBusinessId(supabase, data.siteId, data.businessId),
+      resolveConversationId(supabase, data.conversationId),
+    ]);
+
+    const insertPayload = {
+      conversation_id: resolvedConversationId,
+      business_id: resolvedBusinessId,
+      site_id: data.siteId || null,
+      status: "new",
+      name: data.name || customFields.name || "Not provided",
+      phone: data.phone || customFields.phone || "Not provided",
+      email: data.email || customFields.email || null,
+      company: data.company || customFields.company || null,
+      service_needed:
+        data.serviceNeeded ||
+        customFields.service_needed ||
+        customFields.serviceNeeded ||
+        data.situation ||
+        null,
+      message: data.message || customFields.message || data.notes || null,
+      preferred_timeline:
+        data.preferredTimeline ||
+        customFields.preferred_timeline ||
+        customFields.preferredTimeline ||
+        data.timeline ||
+        null,
+      property_address:
+        data.propertyAddress ||
+        customFields.street_address ||
+        customFields.property_address ||
+        null,
+      property_city: data.propertyCity || customFields.city || customFields.property_city || null,
+      situation:
+        data.situation ||
+        data.serviceNeeded ||
+        customFields.service_needed ||
+        customFields.serviceNeeded ||
+        null,
+      timeline:
+        data.timeline ||
+        data.preferredTimeline ||
+        customFields.preferred_timeline ||
+        customFields.preferredTimeline ||
+        null,
+      property_condition: data.propertyCondition || customFields.property_condition || null,
+      notes: data.notes || data.message || customFields.message || null,
+      custom_fields: customFields,
+      source_url: data.sourceUrl || null,
+    };
+
+    const { data: lead, error } = await insertLeadWithFallback(supabase, insertPayload);
+
+    if (error || !lead) {
+      return jsonResponse({ error: error?.message || "Lead could not be saved" }, 500);
+    }
+
+    try {
+      const emailResult = await sendLeadEmailNotification({ supabase, lead });
+      if (!emailResult.sent && !emailResult.skipped) {
+        console.error("Lead email notification failed", emailResult.error);
+      }
+    } catch (emailError) {
+      console.error(
+        "Lead email notification failed",
+        emailError instanceof Error ? emailError.message : emailError,
+      );
+    }
+
+    try {
+      const payload = buildLeadWebhookPayload(lead, "seller_lead.created");
+      const webhookResult = await sendLeadWebhookForBusiness({
+        businessId: lead.business_id,
+        payload,
       });
-    }
-  } catch (webhookError) {
-    await recordLeadWebhookResult(lead.id, {
-      sent: false,
-      error:
-        webhookError instanceof Error
-          ? webhookError.message
-          : "Unknown webhook error",
-    });
-  }
 
-  return NextResponse.json(
-    { ok: true, leadId: lead.id },
-    { headers: corsHeaders() },
-  );
+      if (!webhookResult.skipped) {
+        await recordLeadWebhookResult(lead.id, {
+          sent: webhookResult.sent,
+          error: webhookResult.error,
+        });
+      }
+    } catch (webhookError) {
+      try {
+        await recordLeadWebhookResult(lead.id, {
+          sent: false,
+          error:
+            webhookError instanceof Error
+              ? webhookError.message
+              : "Unknown webhook error",
+        });
+      } catch (_) {}
+    }
+
+    return jsonResponse({ ok: true, leadId: lead.id });
+  } catch (error) {
+    return jsonResponse(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Lead could not be submitted due to a server error.",
+      },
+      500,
+    );
+  }
 }
