@@ -40,6 +40,7 @@ const leadSchema = z.object({
   propertyCondition: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   sourceUrl: z.string().optional().nullable(),
+  customFields: z.record(z.any()).optional().nullable(),
 });
 
 async function resolveConversationId(
@@ -74,6 +75,11 @@ async function resolveBusinessId(
   return data?.business_id || null;
 }
 
+function hasCustomFieldValue(customFields?: Record<string, any> | null) {
+  if (!customFields) return false;
+  return Object.values(customFields).some((value) => String(value || "").trim());
+}
+
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const parsed = leadSchema.safeParse(body);
@@ -86,6 +92,7 @@ export async function POST(request: Request) {
   }
 
   const data = parsed.data;
+  const customFields = data.customFields || {};
 
   const hasUsefulLeadInfo = Boolean(
     data.name ||
@@ -97,7 +104,8 @@ export async function POST(request: Request) {
       data.propertyAddress ||
       data.propertyCity ||
       data.situation ||
-      data.notes,
+      data.notes ||
+      hasCustomFieldValue(customFields),
   );
 
   if (!hasUsefulLeadInfo) {
@@ -126,19 +134,20 @@ export async function POST(request: Request) {
     business_id: resolvedBusinessId,
     site_id: data.siteId || null,
     status: "new",
-    name: data.name || "Not provided",
-    phone: data.phone || "Not provided",
-    email: data.email || null,
-    company: data.company || null,
-    service_needed: data.serviceNeeded || data.situation || null,
-    message: data.message || data.notes || null,
-    preferred_timeline: data.preferredTimeline || data.timeline || null,
-    property_address: data.propertyAddress || null,
-    property_city: data.propertyCity || null,
-    situation: data.situation || data.serviceNeeded || null,
-    timeline: data.timeline || data.preferredTimeline || null,
-    property_condition: data.propertyCondition || null,
-    notes: data.notes || data.message || null,
+    name: data.name || customFields.name || "Not provided",
+    phone: data.phone || customFields.phone || "Not provided",
+    email: data.email || customFields.email || null,
+    company: data.company || customFields.company || null,
+    service_needed: data.serviceNeeded || customFields.service_needed || customFields.serviceNeeded || data.situation || null,
+    message: data.message || customFields.message || data.notes || null,
+    preferred_timeline: data.preferredTimeline || customFields.preferred_timeline || customFields.preferredTimeline || data.timeline || null,
+    property_address: data.propertyAddress || customFields.street_address || customFields.property_address || null,
+    property_city: data.propertyCity || customFields.city || customFields.property_city || null,
+    situation: data.situation || data.serviceNeeded || customFields.service_needed || customFields.serviceNeeded || null,
+    timeline: data.timeline || data.preferredTimeline || customFields.preferred_timeline || customFields.preferredTimeline || null,
+    property_condition: data.propertyCondition || customFields.property_condition || null,
+    notes: data.notes || data.message || customFields.message || null,
+    custom_fields: customFields,
     source_url: data.sourceUrl || null,
   };
 
