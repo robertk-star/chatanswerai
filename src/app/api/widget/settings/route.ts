@@ -111,6 +111,7 @@ function defaultSettings(siteId: string) {
     widgetShowCallButton: true,
     widgetCallButtonText: "Call Now",
     widgetFormFields: defaultFormFields,
+    formFields: [],
     widgetQuickQuestions: [
       "What services do you offer?",
       "What areas do you serve?",
@@ -144,6 +145,26 @@ function quickQuestionsFromSettings(settings: any, fallbackQuestions: string[]) 
     .slice(0, 4);
 
   return questions.length ? questions : fallbackQuestions;
+}
+
+function normalizeFormFields(rows: any[]) {
+  return (rows || [])
+    .filter((row) => row?.is_enabled !== false)
+    .map((row) => ({
+      id: row.id,
+      key: row.field_key,
+      label: row.label,
+      type: row.field_type || "text",
+      placeholder: row.placeholder || "",
+      options: String(row.options || "")
+        .split(/\r?\n|,/)
+        .map((option) => option.trim())
+        .filter(Boolean),
+      required: Boolean(row.is_required),
+      sortOrder: row.sort_order || 0,
+      system: Boolean(row.is_system),
+    }))
+    .sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
 export async function GET(request: Request) {
@@ -199,9 +220,10 @@ export async function GET(request: Request) {
 
   let business: any = null;
   let settings: any = null;
+  let formFieldRows: any[] = [];
 
   if (site.business_id) {
-    const [businessResult, settingsResult] = await Promise.all([
+    const [businessResult, settingsResult, formFieldsResult] = await Promise.all([
       supabase
         .from("businesses")
         .select("id, name, phone, email, website, primary_market")
@@ -213,13 +235,22 @@ export async function GET(request: Request) {
         .eq("business_id", site.business_id)
         .order("updated_at", { ascending: false })
         .limit(1),
+      supabase
+        .from("widget_form_fields")
+        .select("id, field_key, label, field_type, placeholder, options, is_enabled, is_required, sort_order, is_system")
+        .eq("business_id", site.business_id)
+        .eq("is_enabled", true)
+        .order("sort_order", { ascending: true }),
     ]);
 
     business = businessResult.data || null;
     settings = Array.isArray(settingsResult.data)
       ? settingsResult.data[0] || null
       : settingsResult.data || null;
+    formFieldRows = formFieldsResult.error ? [] : formFieldsResult.data || [];
   }
+
+  const formFields = normalizeFormFields(formFieldRows);
 
   const mergedSettings = {
     ...fallback,
@@ -273,6 +304,7 @@ export async function GET(request: Request) {
       fallback.widgetQuickQuestions,
     ),
     widgetFormFields: formFieldsFromSettings(settings),
+    formFields,
   };
 
   return NextResponse.json(
