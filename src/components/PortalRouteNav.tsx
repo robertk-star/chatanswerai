@@ -21,6 +21,7 @@ const clientLinks = [
   { href: "/client/analytics", label: "Analytics" },
   { href: "/client/integrations", label: "Integrations" },
   { href: "/client/settings", label: "Settings" },
+  { href: "/client/form-builder", label: "Form Builder" },
   { href: "/client/faqs", label: "FAQs" },
   { href: "/client/account", label: "Account" },
 ];
@@ -90,7 +91,7 @@ export function PortalRouteNav() {
 
   const links = isAdminRoute ? adminLinks : clientLinks;
   const logoutAction = isAdminRoute ? "/api/admin/logout" : "/api/client/logout";
-  const label = isAdminRoute ? "Chat Answer AI Admin" : "Chat Answer AI Client Portal";
+  const label = isAdminRoute ? "ChatarAI Admin" : "ChatarAI Client Portal";
   const homeHref = isAdminRoute ? "/admin" : "/client";
   const homeLabel = isAdminRoute ? "Back to Admin Dashboard" : "Back to Client Dashboard";
 
