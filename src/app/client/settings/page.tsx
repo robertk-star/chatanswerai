@@ -157,6 +157,13 @@ export default async function ClientSettingsPage({
                 <textarea name="custom_ai_instructions" defaultValue={settings.custom_ai_instructions || ""} placeholder="Tell the assistant what to focus on, how to answer, and what to avoid." className="mt-1 min-h-28 w-full rounded-xl border border-slate-300 px-4 py-3" />
               </label>
               <label className="block text-sm font-semibold text-slate-700 md:col-span-2">
+                Default Chat CTA Text
+                <textarea name="chat_cta_text" defaultValue={settings.chat_cta_text || ""} placeholder="Example: Use the request button to tell the SaffHire team what type of screening you need." className="mt-1 min-h-20 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                <span className="mt-1 block text-xs text-slate-500">
+                  This is the short call-to-action added to chat answers when the answer does not already include one.
+                </span>
+              </label>
+              <label className="block text-sm font-semibold text-slate-700 md:col-span-2">
                 Important Disclaimers or Limits
                 <textarea name="important_disclaimers_or_limits" defaultValue={settings.important_disclaimers_or_limits || ""} placeholder="Example: We do not provide legal advice. Final pricing requires review by the team." className="mt-1 min-h-24 w-full rounded-xl border border-slate-300 px-4 py-3" />
               </label>
