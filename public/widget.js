@@ -8,7 +8,7 @@
   const sourceUrl = window.location.href;
   const sourceDomain = window.location.hostname;
 
-  window.CHATARAI_WIDGET_VERSION = "chatarai-quick-questions-20260610d";
+  window.CHATARAI_WIDGET_VERSION = "chatarai-form-fields-20260610e";
   window.CHATARAI_WIDGET_API_BASE = baseUrl;
 
   const DEFAULT_QUICK_QUESTIONS = [
@@ -17,6 +17,16 @@
     "How fast can someone follow up?",
     "Can I request information?",
   ];
+
+  const DEFAULT_FORM_FIELDS = {
+    name: true,
+    email: true,
+    phone: true,
+    company: true,
+    serviceNeeded: true,
+    preferredTimeline: true,
+    message: true,
+  };
 
   const DEFAULT_SETTINGS = {
     widgetTitle: "Service Inquiry Assistant",
@@ -31,6 +41,7 @@
     widgetShowCallButton: true,
     widgetCallButtonText: "Call Now",
     widgetQuickQuestions: DEFAULT_QUICK_QUESTIONS,
+    widgetFormFields: DEFAULT_FORM_FIELDS,
     businessPhone: "",
   };
 
@@ -90,6 +101,19 @@
       .slice(0, 4);
 
     return cleaned.length ? cleaned : DEFAULT_QUICK_QUESTIONS;
+  }
+
+  function getFormFields(settings = state.settings) {
+    const fields = settings.widgetFormFields || settings.widget_form_fields || {};
+    return {
+      name: fields.name ?? settings.widgetFormShowName ?? settings.widget_form_show_name ?? DEFAULT_FORM_FIELDS.name,
+      email: fields.email ?? settings.widgetFormShowEmail ?? settings.widget_form_show_email ?? DEFAULT_FORM_FIELDS.email,
+      phone: fields.phone ?? settings.widgetFormShowPhone ?? settings.widget_form_show_phone ?? DEFAULT_FORM_FIELDS.phone,
+      company: fields.company ?? settings.widgetFormShowCompany ?? settings.widget_form_show_company ?? DEFAULT_FORM_FIELDS.company,
+      serviceNeeded: fields.serviceNeeded ?? settings.widgetFormShowServiceNeeded ?? settings.widget_form_show_service_needed ?? DEFAULT_FORM_FIELDS.serviceNeeded,
+      preferredTimeline: fields.preferredTimeline ?? settings.widgetFormShowPreferredTimeline ?? settings.widget_form_show_preferred_timeline ?? DEFAULT_FORM_FIELDS.preferredTimeline,
+      message: fields.message ?? settings.widgetFormShowMessage ?? settings.widget_form_show_message ?? DEFAULT_FORM_FIELDS.message,
+    };
   }
 
   function applyStyles() {
@@ -175,6 +199,7 @@
         widgetShowCallButton: settings.widgetShowCallButton ?? settings.widget_show_call_button ?? state.settings.widgetShowCallButton,
         widgetCallButtonText: settings.widgetCallButtonText || settings.widget_call_button_text || state.settings.widgetCallButtonText,
         widgetQuickQuestions: cleanQuickQuestions(settings),
+        widgetFormFields: getFormFields(settings),
         businessPhone: settings.businessPhone || settings.phone || settings.business_phone || state.settings.businessPhone,
       };
     } catch (_) {}
@@ -197,9 +222,12 @@
   }
 
   function validateForm() {
-    if (!state.form.name.trim()) return "Name is required.";
-    if (!state.form.phone.trim()) return "Phone number is required.";
-    if (!state.form.serviceNeeded.trim() && !state.form.message.trim()) return "Service needed or message is required.";
+    const fields = getFormFields();
+    if (fields.name && !state.form.name.trim()) return "Name is required.";
+    if (fields.phone && !state.form.phone.trim()) return "Phone number is required.";
+    if ((fields.serviceNeeded || fields.message) && !state.form.serviceNeeded.trim() && !state.form.message.trim()) {
+      return "Service needed or message is required.";
+    }
     return "";
   }
 
@@ -212,10 +240,23 @@
     render();
 
     try {
+      const fields = getFormFields();
+      const payload = {
+        conversationId: state.conversationId,
+        siteId,
+        name: fields.name ? state.form.name : "",
+        email: fields.email ? state.form.email : "",
+        phone: fields.phone ? state.form.phone : "",
+        company: fields.company ? state.form.company : "",
+        serviceNeeded: fields.serviceNeeded ? state.form.serviceNeeded : "",
+        preferredTimeline: fields.preferredTimeline ? state.form.preferredTimeline : "",
+        message: fields.message ? state.form.message : "",
+        sourceUrl,
+      };
       const res = await fetch(`${baseUrl}/api/leads`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ conversationId: state.conversationId, siteId, ...state.form, sourceUrl }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Lead could not be submitted.");
@@ -308,20 +349,25 @@
   }
 
   function renderFormBody() {
-    return [el("div", { class: "chatarai-form" }, [
+    const fields = getFormFields();
+    const formNodes = [
       el("div", { class: "chatarai-form-title" }, ["Send a service inquiry"]),
       state.formError ? el("div", { class: "chatarai-error" }, [state.formError]) : null,
-      el("div", { class: "chatarai-help" }, ["Required: name, phone, and either service needed or message."]),
-      field("Name *", "name", "Your name"),
-      field("Email", "email", "you@example.com", "email"),
-      field("Phone *", "phone", "Best phone number"),
-      field("Company", "company", "Company name, if applicable"),
-      field("Service needed *", "serviceNeeded", "Tell us what you need help with"),
-      selectField("Preferred timeline", "preferredTimeline", ["", "ASAP", "This week", "Within 30 days", "1–3 months", "Just researching"]),
-      textareaField("Message *", "message", "Share any details that may help the team respond."),
-      el("button", { class: "chatarai-primary", type: "button", disabled: state.loading, onclick: submitLead }, [state.loading ? "Submitting..." : "Submit Inquiry"]),
-      el("button", { class: "chatarai-secondary", type: "button", style: { marginTop: "10px", color: "#334155", borderColor: "#cbd5e1", background: "#fff" }, onclick: () => setView("chat") }, ["Back to chat"]),
-    ])];
+      el("div", { class: "chatarai-help" }, ["Share the details requested below and the team can follow up."]),
+    ];
+
+    if (fields.name) formNodes.push(field("Name *", "name", "Your name"));
+    if (fields.email) formNodes.push(field("Email", "email", "you@example.com", "email"));
+    if (fields.phone) formNodes.push(field("Phone *", "phone", "Best phone number"));
+    if (fields.company) formNodes.push(field("Company", "company", "Company name, if applicable"));
+    if (fields.serviceNeeded) formNodes.push(field("Service needed *", "serviceNeeded", "Tell us what you need help with"));
+    if (fields.preferredTimeline) formNodes.push(selectField("Preferred timeline", "preferredTimeline", ["", "ASAP", "This week", "Within 30 days", "1–3 months", "Just researching"]));
+    if (fields.message) formNodes.push(textareaField("Message *", "message", "Share any details that may help the team respond."));
+
+    formNodes.push(el("button", { class: "chatarai-primary", type: "button", disabled: state.loading, onclick: submitLead }, [state.loading ? "Submitting..." : "Submit Inquiry"]));
+    formNodes.push(el("button", { class: "chatarai-secondary", type: "button", style: { marginTop: "10px", color: "#334155", borderColor: "#cbd5e1", background: "#fff" }, onclick: () => setView("chat") }, ["Back to chat"]));
+
+    return [el("div", { class: "chatarai-form" }, formNodes)];
   }
 
   function renderSuccessBody() {
