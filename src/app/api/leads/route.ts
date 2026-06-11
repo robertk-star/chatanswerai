@@ -26,8 +26,8 @@ const leadSchema = z.object({
   conversationId: z.string().uuid().nullable().optional(),
   siteId: z.string().optional(),
   businessId: z.string().uuid().nullable().optional(),
-  name: z.string().min(1, "Name is required"),
-  phone: z.string().min(1, "Phone number is required"),
+  name: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
   email: z.string().email().optional().or(z.literal("")).nullable(),
   company: z.string().optional().nullable(),
   serviceNeeded: z.string().optional().nullable(),
@@ -87,14 +87,22 @@ export async function POST(request: Request) {
 
   const data = parsed.data;
 
-  if (
-    !data.serviceNeeded &&
-    !data.message &&
-    !data.propertyAddress &&
-    !data.propertyCity
-  ) {
+  const hasUsefulLeadInfo = Boolean(
+    data.name ||
+      data.phone ||
+      data.email ||
+      data.company ||
+      data.serviceNeeded ||
+      data.message ||
+      data.propertyAddress ||
+      data.propertyCity ||
+      data.situation ||
+      data.notes,
+  );
+
+  if (!hasUsefulLeadInfo) {
     return NextResponse.json(
-      { error: "Service needed or message is required" },
+      { error: "At least one lead field is required" },
       { status: 400, headers: corsHeaders() },
     );
   }
@@ -118,8 +126,8 @@ export async function POST(request: Request) {
     business_id: resolvedBusinessId,
     site_id: data.siteId || null,
     status: "new",
-    name: data.name,
-    phone: data.phone,
+    name: data.name || "Not provided",
+    phone: data.phone || "Not provided",
     email: data.email || null,
     company: data.company || null,
     service_needed: data.serviceNeeded || data.situation || null,
@@ -147,7 +155,6 @@ export async function POST(request: Request) {
     );
   }
 
-  // Email notifications are intentionally non-blocking for lead creation.
   try {
     const emailResult = await sendLeadEmailNotification({ supabase, lead });
     if (!emailResult.sent && !emailResult.skipped) {
@@ -160,7 +167,6 @@ export async function POST(request: Request) {
     );
   }
 
-  // Webhook delivery is intentionally non-blocking for lead creation.
   try {
     const payload = buildLeadWebhookPayload(lead, "seller_lead.created");
     const webhookResult = await sendLeadWebhookForBusiness({
