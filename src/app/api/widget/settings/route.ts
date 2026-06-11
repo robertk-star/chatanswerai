@@ -69,6 +69,21 @@ function isAllowedDomain(site: WidgetSite, requestDomain: string) {
   );
 }
 
+const defaultFormFields = {
+  name: true,
+  email: true,
+  phone: true,
+  company: true,
+  serviceNeeded: true,
+  preferredTimeline: true,
+  message: true,
+};
+
+function boolSetting(value: any, fallback = true) {
+  if (value === null || value === undefined) return fallback;
+  return Boolean(value);
+}
+
 function defaultSettings(siteId: string) {
   return {
     siteId,
@@ -95,12 +110,25 @@ function defaultSettings(siteId: string) {
     widgetButtonTextColor: "#0f172a",
     widgetShowCallButton: true,
     widgetCallButtonText: "Call Now",
+    widgetFormFields: defaultFormFields,
     widgetQuickQuestions: [
       "What services do you offer?",
       "What areas do you serve?",
       "How fast can someone follow up?",
       "Can I request information?",
     ],
+  };
+}
+
+function formFieldsFromSettings(settings: any) {
+  return {
+    name: boolSetting(settings?.widget_form_show_name, true),
+    email: boolSetting(settings?.widget_form_show_email, true),
+    phone: boolSetting(settings?.widget_form_show_phone, true),
+    company: boolSetting(settings?.widget_form_show_company, true),
+    serviceNeeded: boolSetting(settings?.widget_form_show_service_needed, true),
+    preferredTimeline: boolSetting(settings?.widget_form_show_preferred_timeline, true),
+    message: boolSetting(settings?.widget_form_show_message, true),
   };
 }
 
@@ -244,6 +272,7 @@ export async function GET(request: Request) {
       settings,
       fallback.widgetQuickQuestions,
     ),
+    widgetFormFields: formFieldsFromSettings(settings),
   };
 
   return NextResponse.json(
