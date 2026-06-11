@@ -226,7 +226,7 @@ export default async function AdminBusinessDetailPage({
               </div>
               <p className="mt-2 text-sm text-slate-500">
                 {planLabel(planName)} plan: {sites.length}/{maxSites} widget
-                sites used.
+                sites used. Open a site to add or change the domain where the widget is allowed to appear.
               </p>
               <div className="mt-5 space-y-4">
                 {sites.length === 0 && (
@@ -243,9 +243,12 @@ export default async function AdminBusinessDetailPage({
                         <div>
                           <div className="font-bold text-navy">{label}</div>
                           <div className="text-sm text-slate-500">
-                            {site.domain || "No domain set"}
+                            Primary domain: {site.domain || "No domain set"}
                           </div>
-                          <div className="text-xs text-slate-400">
+                          <div className="mt-1 whitespace-pre-line text-xs text-slate-500">
+                            Allowed domains: {site.allowed_domains || "No allowed domains set"}
+                          </div>
+                          <div className="mt-1 text-xs text-slate-400">
                             Site ID: {site.site_id}
                           </div>
                         </div>
@@ -258,6 +261,20 @@ export default async function AdminBusinessDetailPage({
                         >
                           {site.is_active === false ? "Inactive" : "Active"}
                         </span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        <Link
+                          href={`/admin/sites/${site.id}`}
+                          className="rounded-full bg-navy px-5 py-2 text-sm font-bold text-white"
+                        >
+                          Edit Domains
+                        </Link>
+                        <Link
+                          href={`/admin/sites/${site.id}`}
+                          className="rounded-full border border-slate-300 px-5 py-2 text-sm font-bold text-navy"
+                        >
+                          Open Site Settings
+                        </Link>
                       </div>
                       <pre className="mt-3 overflow-x-auto rounded-xl bg-slate-50 p-3 text-xs text-slate-700">
                         {buildWidgetEmbedCode(site.site_id)}
@@ -321,11 +338,7 @@ export default async function AdminBusinessDetailPage({
                       </div>
                       <div className="text-sm text-slate-500">
                         {lead.phone || "No phone"} ·{" "}
-                        {lead.service_needed ||
-                          lead.message ||
-                          lead.property_city ||
-                          lead.property_address ||
-                          "No service info"}
+                        {lead.property_city || lead.service_needed || "No service info"}
                       </div>
                     </div>
                     <Link
