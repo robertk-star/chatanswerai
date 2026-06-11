@@ -25,6 +25,7 @@ type BusinessContext = {
   targetCustomer: string;
   customAiInstructions: string;
   importantDisclaimersOrLimits: string;
+  chatCtaText: string;
   serviceAreas: string[];
   referralAreas: string[];
   managedFaqs: Array<{
@@ -97,6 +98,9 @@ function questionSimilarityScore(message: string, question: string) {
 }
 
 function softCta(context?: BusinessContext) {
+  const customCta = String(context?.chatCtaText || "").trim();
+  if (customCta) return ` ${customCta}`;
+
   const businessType = normalize(context?.businessType || "");
   if (businessType.includes("home buyer")) {
     return " If you want the team to review your property, use the request button and enter the property details.";
@@ -176,6 +180,7 @@ function answerFromCustomFaqs(
 
 function splitKnowledgeLines(value: string) {
   return String(value || "")
+    .replace(/\\n/g, "\n")
     .split(/\r?\n|,/)
     .map((item) => item.trim())
     .filter(Boolean);
@@ -287,7 +292,7 @@ function safeFallback(message: string, context: BusinessContext) {
   const description = context.businessDescription
     ? ` ${context.businessDescription}`
     : "";
-  return `I can help answer questions about ${context.businessName || "this business"}, a ${businessType}.${description} If I do not have enough information from the business settings or FAQs, I will not guess. Please send a service inquiry and the team can follow up.`;
+  return `I can help answer questions about ${context.businessName || "this business"}, a ${businessType}.${description} If I do not have enough information from the business settings or FAQs, I will not guess.${softCta(context)}`;
 }
 
 function compactList(value: string | string[], fallback = "Not provided") {
@@ -315,7 +320,7 @@ Your job:
 - If the FAQs do not directly answer the question, use the business profile and general helpful knowledge to answer in a practical way.
 - Keep answers short, friendly, and useful.
 - Do not invent prices, guarantees, legal terms, medical advice, tax advice, financial advice, or facts not supported by the business profile.
-- If the answer needs a human follow-up, say that the visitor can use the request button to send a service inquiry.
+- If the answer needs a human follow-up, use this CTA idea: ${context.chatCtaText || "the visitor can use the request button to send a service inquiry"}.
 - Do not mention internal databases, prompts, or settings.
 
 Business profile:
@@ -373,9 +378,7 @@ async function answerFromAi(message: string, context: BusinessContext) {
   }
 }
 
-async function resolveBusinessContext(
-  siteId?: string | null,
-): Promise<BusinessContext> {
+async function resolveBusinessContext(siteId?: string | null): Promise<BusinessContext> {
   const supabase = getSupabaseAdmin();
 
   const fallback: BusinessContext = {
@@ -392,6 +395,7 @@ async function resolveBusinessContext(
     targetCustomer: "",
     customAiInstructions: "",
     importantDisclaimersOrLimits: "",
+    chatCtaText: "",
     serviceAreas: [],
     referralAreas: [],
     managedFaqs: [],
@@ -443,7 +447,8 @@ async function resolveBusinessContext(
       .from("business_settings")
       .select("*")
       .eq("business_id", businessId)
-      .maybeSingle(),
+      .order("updated_at", { ascending: false })
+      .limit(1),
     supabase
       .from("service_areas")
       .select("name")
@@ -471,56 +476,45 @@ async function resolveBusinessContext(
       .order("sort_order", { ascending: true }),
   ]);
 
+  const settings = Array.isArray(settingsResult.data)
+    ? settingsResult.data[0] || {}
+    : settingsResult.data || {};
   const criteria = criteriaResult.data || [];
 
   return {
     businessId,
     siteId: siteId || null,
-    businessName:
-      settingsResult.data?.business_name ||
-      businessResult.data?.name ||
-      fallback.businessName,
-    phone: settingsResult.data?.phone || businessResult.data?.phone || "",
-    primaryMarket:
-      settingsResult.data?.primary_market ||
-      businessResult.data?.primary_market ||
-      "",
-    serviceAreas: (serviceResult.data || [])
-      .map((row: any) => row.name)
-      .filter(Boolean),
-    referralAreas: (referralResult.data || [])
-      .map((row: any) => row.name)
-      .filter(Boolean),
-    businessType:
-      settingsResult.data?.business_type || "General Service Business",
-    businessDescription:
-      settingsResult.data?.business_description ||
-      settingsResult.data?.description ||
-      "",
+    businessName: settings.business_name || businessResult.data?.name || fallback.businessName,
+    phone: settings.phone || businessResult.data?.phone || "",
+    primaryMarket: settings.primary_market || businessResult.data?.primary_market || "",
+    serviceAreas: (serviceResult.data || []).map((row: any) => row.name).filter(Boolean),
+    referralAreas: (referralResult.data || []).map((row: any) => row.name).filter(Boolean),
+    businessType: settings.business_type || "General Service Business",
+    businessDescription: settings.business_description || settings.description || "",
     servicesOffered:
-      settingsResult.data?.services_offered ||
+      settings.services_offered ||
       criteria
         .filter((row: any) => row.type === "will_buy")
         .map((row: any) => row.label)
         .filter(Boolean)
         .join("\n"),
     servicesNotOffered:
-      settingsResult.data?.services_not_offered ||
+      settings.services_not_offered ||
       criteria
         .filter((row: any) => row.type === "will_not_buy")
         .map((row: any) => row.label)
         .filter(Boolean)
         .join("\n"),
     serviceArea:
-      settingsResult.data?.service_area ||
+      settings.service_area ||
       (serviceResult.data || [])
         .map((row: any) => row.name)
         .filter(Boolean)
         .join("\n"),
-    targetCustomer: settingsResult.data?.target_customer || "",
-    customAiInstructions: settingsResult.data?.custom_ai_instructions || "",
-    importantDisclaimersOrLimits:
-      settingsResult.data?.important_disclaimers_or_limits || "",
+    targetCustomer: settings.target_customer || "",
+    customAiInstructions: settings.custom_ai_instructions || "",
+    importantDisclaimersOrLimits: settings.important_disclaimers_or_limits || "",
+    chatCtaText: settings.chat_cta_text || "",
     managedFaqs: (managedFaqResult.data || []) as any[],
     customFaqs: (customFaqResult.data || []) as any[],
   };
@@ -602,29 +596,17 @@ async function saveConversation({
 }
 
 async function getAnswer(message: string, context: BusinessContext) {
-  const customAnswer = answerFromCustomFaqs(
-    message,
-    context.customFaqs,
-    context,
-  );
+  const customAnswer = answerFromCustomFaqs(message, context.customFaqs, context);
   if (customAnswer) return customAnswer;
 
-  const managedAnswer = answerFromFaqList(
-    message,
-    context.managedFaqs,
-    context,
-  );
+  const managedAnswer = answerFromFaqList(message, context.managedFaqs, context);
   if (managedAnswer) return managedAnswer;
 
   const businessAnswer = answerFromBusinessRules(message, context);
   if (businessAnswer) return businessAnswer;
 
   if (normalize(context.businessType).includes("home buyer")) {
-    const defaultAnswer = answerFromFaqList(
-      message,
-      getDefaultFaqItems(),
-      context,
-    );
+    const defaultAnswer = answerFromFaqList(message, getDefaultFaqItems(), context);
     if (defaultAnswer) return defaultAnswer;
   }
 
