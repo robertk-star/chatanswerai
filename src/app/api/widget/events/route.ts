@@ -3,13 +3,20 @@ import { z } from "zod";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, Accept, Origin",
+    "Access-Control-Max-Age": "86400",
+    "Cache-Control": "no-store, no-cache, max-age=0, must-revalidate",
   };
+}
+
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return NextResponse.json(body, { status, headers: corsHeaders() });
 }
 
 export async function OPTIONS() {
@@ -40,47 +47,79 @@ async function resolveBusinessId(supabase: any, siteId?: string | null) {
   return data?.business_id || null;
 }
 
+async function insertEventWithFallback(
+  supabase: any,
+  payload: Record<string, unknown>,
+) {
+  const firstTry = await supabase.from("widget_events").insert(payload);
+  if (!firstTry.error) return firstTry;
+
+  const message = String(firstTry.error.message || "");
+  const safePayload = { ...payload } as Record<string, unknown>;
+
+  if (message.includes("column") && message.includes("type")) {
+    delete safePayload.type;
+  }
+  if (message.includes("column") && message.includes("metadata")) {
+    delete safePayload.metadata;
+  }
+  if (message.includes("column") && message.includes("lead_id")) {
+    delete safePayload.lead_id;
+  }
+  if (message.includes("column") && message.includes("conversation_id")) {
+    delete safePayload.conversation_id;
+  }
+
+  if (Object.keys(safePayload).length === Object.keys(payload).length) {
+    return firstTry;
+  }
+
+  return supabase.from("widget_events").insert(safePayload);
+}
+
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null);
-  const parsed = eventSchema.safeParse(body);
+  try {
+    const body = await request.json().catch(() => null);
+    const parsed = eventSchema.safeParse(body);
 
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.errors[0]?.message || "Invalid widget event" },
-      { status: 400, headers: corsHeaders() }
-    );
+    if (!parsed.success) {
+      return jsonResponse(
+        { ok: true, skipped: true, warning: parsed.error.errors[0]?.message || "Invalid widget event" },
+        200,
+      );
+    }
+
+    const data = parsed.data;
+    const eventType = data.eventType || data.type || "unknown";
+    const siteId = data.siteId || "demo";
+    const supabase = getSupabaseAdmin();
+
+    if (!supabase) {
+      return jsonResponse({ ok: true, skipped: true });
+    }
+
+    const businessId = await resolveBusinessId(supabase, siteId);
+
+    const { error } = await insertEventWithFallback(supabase, {
+      event_type: eventType,
+      type: eventType,
+      site_id: siteId,
+      business_id: businessId,
+      source_url: data.sourceUrl || data.pageUrl || null,
+      page_url: data.pageUrl || data.sourceUrl || null,
+      domain: data.domain || null,
+      conversation_id: data.conversationId || null,
+      lead_id: data.leadId || null,
+      metadata: data.metadata || {},
+    });
+
+    if (error) {
+      console.error("Widget event could not be saved", error.message);
+      return jsonResponse({ ok: true, skipped: true, warning: error.message });
+    }
+
+    return jsonResponse({ ok: true });
+  } catch (error) {
+    return jsonResponse({ ok: true, skipped: true });
   }
-
-  const data = parsed.data;
-  const eventType = data.eventType || data.type || "unknown";
-  const siteId = data.siteId || "demo";
-  const supabase = getSupabaseAdmin();
-
-  if (!supabase) {
-    return NextResponse.json({ ok: true, skipped: true }, { headers: corsHeaders() });
-  }
-
-  const businessId = await resolveBusinessId(supabase, siteId);
-
-  const { error } = await supabase.from("widget_events").insert({
-    event_type: eventType,
-    type: eventType,
-    site_id: siteId,
-    business_id: businessId,
-    source_url: data.sourceUrl || data.pageUrl || null,
-    page_url: data.pageUrl || data.sourceUrl || null,
-    domain: data.domain || null,
-    conversation_id: data.conversationId || null,
-    lead_id: data.leadId || null,
-    metadata: data.metadata || {},
-  });
-
-  if (error) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500, headers: corsHeaders() }
-    );
-  }
-
-  return NextResponse.json({ ok: true }, { headers: corsHeaders() });
 }
