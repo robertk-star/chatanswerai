@@ -41,6 +41,7 @@ function normalizeDomain(value?: string | null) {
 
 function splitDomains(value?: string | null) {
   return String(value || "")
+    .replace(/\\n/g, "\n")
     .split(/[\n,]+/)
     .map(normalizeDomain)
     .filter(Boolean);
@@ -157,6 +158,7 @@ function normalizeFormFields(rows: any[]) {
       type: row.field_type || "text",
       placeholder: row.placeholder || "",
       options: String(row.options || "")
+        .replace(/\\n/g, "\n")
         .split(/\r?\n|,/)
         .map((option) => option.trim())
         .filter(Boolean),
