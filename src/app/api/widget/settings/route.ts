@@ -73,7 +73,7 @@ function defaultSettings(siteId: string) {
   return {
     siteId,
     businessId: null,
-    businessName: "Chat Answer AI",
+    businessName: "ChatarAI",
     businessPhone: "",
     businessType: "General Service Business",
     businessDescription: "",
@@ -95,7 +95,27 @@ function defaultSettings(siteId: string) {
     widgetButtonTextColor: "#0f172a",
     widgetShowCallButton: true,
     widgetCallButtonText: "Call Now",
+    widgetQuickQuestions: [
+      "What services do you offer?",
+      "What areas do you serve?",
+      "How fast can someone follow up?",
+      "Can I request information?",
+    ],
   };
+}
+
+function quickQuestionsFromSettings(settings: any, fallbackQuestions: string[]) {
+  const questions = [
+    settings?.widget_quick_question_1,
+    settings?.widget_quick_question_2,
+    settings?.widget_quick_question_3,
+    settings?.widget_quick_question_4,
+  ]
+    .map((question) => String(question || "").trim())
+    .filter(Boolean)
+    .slice(0, 4);
+
+  return questions.length ? questions : fallbackQuestions;
 }
 
 export async function GET(request: Request) {
@@ -163,11 +183,14 @@ export async function GET(request: Request) {
         .from("business_settings")
         .select("*")
         .eq("business_id", site.business_id)
-        .maybeSingle(),
+        .order("updated_at", { ascending: false })
+        .limit(1),
     ]);
 
     business = businessResult.data || null;
-    settings = settingsResult.data || null;
+    settings = Array.isArray(settingsResult.data)
+      ? settingsResult.data[0] || null
+      : settingsResult.data || null;
   }
 
   const mergedSettings = {
@@ -213,6 +236,14 @@ export async function GET(request: Request) {
       settings?.widget_show_call_button ?? fallback.widgetShowCallButton,
     widgetCallButtonText:
       settings?.widget_call_button_text || fallback.widgetCallButtonText,
+    widgetQuickQuestion1: settings?.widget_quick_question_1 || "",
+    widgetQuickQuestion2: settings?.widget_quick_question_2 || "",
+    widgetQuickQuestion3: settings?.widget_quick_question_3 || "",
+    widgetQuickQuestion4: settings?.widget_quick_question_4 || "",
+    widgetQuickQuestions: quickQuestionsFromSettings(
+      settings,
+      fallback.widgetQuickQuestions,
+    ),
   };
 
   return NextResponse.json(
