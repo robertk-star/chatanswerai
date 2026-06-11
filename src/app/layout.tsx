@@ -19,7 +19,7 @@ export default function RootLayout({
         <PortalRouteNav />
         {children}
         <Script
-          src="/widget.js?v=chatarai-site-widget-20260610b"
+          src="/widget.js?v=chatarai-form-builder-20260610g"
           data-site-id="caai"
           strategy="afterInteractive"
         />
