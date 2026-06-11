@@ -90,6 +90,7 @@ export async function POST(request: Request) {
     formData,
     "important_disclaimers_or_limits",
   );
+  const chatCtaText = value(formData, "chat_cta_text");
   const widgetTitle =
     value(formData, "widget_title") || "Service Inquiry Assistant";
   const widgetSubtitle =
@@ -104,13 +105,6 @@ export async function POST(request: Request) {
   const widgetQuickQuestion3 = value(formData, "widget_quick_question_3");
   const widgetQuickQuestion4 = value(formData, "widget_quick_question_4");
   const widgetShowCallButton = isChecked(formData, "widget_show_call_button");
-  const widgetFormShowName = isChecked(formData, "widget_form_show_name");
-  const widgetFormShowEmail = isChecked(formData, "widget_form_show_email");
-  const widgetFormShowPhone = isChecked(formData, "widget_form_show_phone");
-  const widgetFormShowCompany = isChecked(formData, "widget_form_show_company");
-  const widgetFormShowServiceNeeded = isChecked(formData, "widget_form_show_service_needed");
-  const widgetFormShowPreferredTimeline = isChecked(formData, "widget_form_show_preferred_timeline");
-  const widgetFormShowMessage = isChecked(formData, "widget_form_show_message");
   const widgetHeaderColor = cleanHexColor(
     value(formData, "widget_header_color"),
     "#0f172a",
@@ -168,6 +162,7 @@ export async function POST(request: Request) {
     target_customer: targetCustomer,
     custom_ai_instructions: customAiInstructions,
     important_disclaimers_or_limits: importantDisclaimersOrLimits,
+    chat_cta_text: chatCtaText,
     widget_title: widgetTitle,
     widget_subtitle: widgetSubtitle,
     widget_quote_button_text: widgetQuoteButtonText,
@@ -175,13 +170,6 @@ export async function POST(request: Request) {
     widget_quick_question_2: widgetQuickQuestion2,
     widget_quick_question_3: widgetQuickQuestion3,
     widget_quick_question_4: widgetQuickQuestion4,
-    widget_form_show_name: widgetFormShowName,
-    widget_form_show_email: widgetFormShowEmail,
-    widget_form_show_phone: widgetFormShowPhone,
-    widget_form_show_company: widgetFormShowCompany,
-    widget_form_show_service_needed: widgetFormShowServiceNeeded,
-    widget_form_show_preferred_timeline: widgetFormShowPreferredTimeline,
-    widget_form_show_message: widgetFormShowMessage,
     widget_header_color: widgetHeaderColor,
     widget_header_text_color: widgetHeaderTextColor,
     widget_button_color: widgetButtonColor,
