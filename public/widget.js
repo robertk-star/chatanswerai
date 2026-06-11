@@ -8,8 +8,15 @@
   const sourceUrl = window.location.href;
   const sourceDomain = window.location.hostname;
 
-  window.CHATARAI_WIDGET_VERSION = "chatarai-settings-sync-20260610c";
+  window.CHATARAI_WIDGET_VERSION = "chatarai-quick-questions-20260610d";
   window.CHATARAI_WIDGET_API_BASE = baseUrl;
+
+  const DEFAULT_QUICK_QUESTIONS = [
+    "What services do you offer?",
+    "What areas do you serve?",
+    "How fast can someone follow up?",
+    "Can I request information?",
+  ];
 
   const DEFAULT_SETTINGS = {
     widgetTitle: "Service Inquiry Assistant",
@@ -23,6 +30,7 @@
     widgetButtonTextColor: "#0f172a",
     widgetShowCallButton: true,
     widgetCallButtonText: "Call Now",
+    widgetQuickQuestions: DEFAULT_QUICK_QUESTIONS,
     businessPhone: "",
   };
 
@@ -64,6 +72,24 @@
       node.appendChild(typeof child === "string" ? document.createTextNode(child) : child);
     });
     return node;
+  }
+
+  function cleanQuickQuestions(settings) {
+    const questions = Array.isArray(settings.widgetQuickQuestions)
+      ? settings.widgetQuickQuestions
+      : [
+          settings.widgetQuickQuestion1 || settings.widget_quick_question_1,
+          settings.widgetQuickQuestion2 || settings.widget_quick_question_2,
+          settings.widgetQuickQuestion3 || settings.widget_quick_question_3,
+          settings.widgetQuickQuestion4 || settings.widget_quick_question_4,
+        ];
+
+    const cleaned = questions
+      .map((question) => String(question || "").trim())
+      .filter(Boolean)
+      .slice(0, 4);
+
+    return cleaned.length ? cleaned : DEFAULT_QUICK_QUESTIONS;
   }
 
   function applyStyles() {
@@ -148,6 +174,7 @@
         widgetButtonTextColor: settings.widgetButtonTextColor || settings.widget_button_text_color || state.settings.widgetButtonTextColor,
         widgetShowCallButton: settings.widgetShowCallButton ?? settings.widget_show_call_button ?? state.settings.widgetShowCallButton,
         widgetCallButtonText: settings.widgetCallButtonText || settings.widget_call_button_text || state.settings.widgetCallButtonText,
+        widgetQuickQuestions: cleanQuickQuestions(settings),
         businessPhone: settings.businessPhone || settings.phone || settings.business_phone || state.settings.businessPhone,
       };
     } catch (_) {}
@@ -255,7 +282,8 @@
     const chat = el("div", { class: "chatarai-chat" });
     state.messages.forEach((m) => chat.appendChild(el("div", { class: `chatarai-message ${m.role === "user" ? "chatarai-user" : "chatarai-assistant"}` }, [m.content])));
     if (state.loading) chat.appendChild(el("div", { class: "chatarai-message chatarai-assistant" }, ["Thinking..."]));
-    chat.appendChild(el("div", { class: "chatarai-replies" }, ["What services do you offer?", "What areas do you serve?", "How fast can someone follow up?", "Can I request information?"].map((reply) => el("button", { class: "chatarai-chip", type: "button", onclick: () => sendMessage(reply) }, [reply]))));
+    const quickQuestions = cleanQuickQuestions(state.settings);
+    chat.appendChild(el("div", { class: "chatarai-replies" }, quickQuestions.map((reply) => el("button", { class: "chatarai-chip", type: "button", onclick: () => sendMessage(reply) }, [reply]))));
     const input = el("input", { class: "chatarai-input", placeholder: "Ask a question...", type: "text", onkeydown: (e) => { if (e.key === "Enter") { e.preventDefault(); const v = e.currentTarget.value; e.currentTarget.value = ""; sendMessage(v); } } });
     const composer = el("div", { class: "chatarai-composer" }, [input, el("button", { class: "chatarai-send", type: "button", disabled: state.loading, onclick: () => { const v = input.value; input.value = ""; sendMessage(v); } }, ["Send"])]);
     return [chat, composer];
