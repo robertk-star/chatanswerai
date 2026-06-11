@@ -201,16 +201,44 @@ export async function POST(request: Request) {
       return jsonResponse({ error: error?.message || "Lead could not be saved" }, 500);
     }
 
+    let emailNotification: Record<string, unknown> = {
+      skipped: true,
+      sent: false,
+      reason: "Email notification not attempted.",
+    };
+
     try {
       const emailResult = await sendLeadEmailNotification({ supabase, lead });
-      if (!emailResult.sent && !emailResult.skipped) {
-        console.error("Lead email notification failed", emailResult.error);
+      emailNotification = {
+        skipped: emailResult.skipped,
+        sent: emailResult.sent,
+        recipients: emailResult.recipients,
+        error: emailResult.error || null,
+      };
+
+      if (emailResult.sent) {
+        console.log("Lead email notification sent", {
+          leadId: lead.id,
+          recipients: emailResult.recipients,
+        });
+      } else {
+        console.warn("Lead email notification not sent", {
+          leadId: lead.id,
+          skipped: emailResult.skipped,
+          recipients: emailResult.recipients,
+          error: emailResult.error,
+        });
       }
     } catch (emailError) {
-      console.error(
-        "Lead email notification failed",
-        emailError instanceof Error ? emailError.message : emailError,
-      );
+      const errorMessage =
+        emailError instanceof Error ? emailError.message : "Unknown email notification error";
+      emailNotification = {
+        skipped: false,
+        sent: false,
+        recipients: [],
+        error: errorMessage,
+      };
+      console.error("Lead email notification failed", errorMessage);
     }
 
     try {
@@ -238,7 +266,7 @@ export async function POST(request: Request) {
       } catch (_) {}
     }
 
-    return jsonResponse({ ok: true, leadId: lead.id });
+    return jsonResponse({ ok: true, leadId: lead.id, emailNotification });
   } catch (error) {
     return jsonResponse(
       {
