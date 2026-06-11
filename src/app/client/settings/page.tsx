@@ -34,11 +34,6 @@ function displayMessage(value?: string) {
   }
 }
 
-function checked(value: any, fallback = true) {
-  if (value === null || value === undefined) return fallback;
-  return Boolean(value);
-}
-
 export default async function ClientSettingsPage({
   searchParams,
 }: {
@@ -213,41 +208,8 @@ export default async function ClientSettingsPage({
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
-                <h3 className="text-sm font-black uppercase tracking-wide text-slate-600">Inquiry Form Fields</h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  Choose which fields appear when a visitor clicks the request button.
-                </p>
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <label className="flex items-center gap-3 rounded-xl bg-white p-3 text-sm font-semibold text-slate-700">
-                    <input name="widget_form_show_name" type="checkbox" defaultChecked={checked(settings.widget_form_show_name)} className="h-5 w-5" />
-                    Name
-                  </label>
-                  <label className="flex items-center gap-3 rounded-xl bg-white p-3 text-sm font-semibold text-slate-700">
-                    <input name="widget_form_show_email" type="checkbox" defaultChecked={checked(settings.widget_form_show_email)} className="h-5 w-5" />
-                    Email
-                  </label>
-                  <label className="flex items-center gap-3 rounded-xl bg-white p-3 text-sm font-semibold text-slate-700">
-                    <input name="widget_form_show_phone" type="checkbox" defaultChecked={checked(settings.widget_form_show_phone)} className="h-5 w-5" />
-                    Phone
-                  </label>
-                  <label className="flex items-center gap-3 rounded-xl bg-white p-3 text-sm font-semibold text-slate-700">
-                    <input name="widget_form_show_company" type="checkbox" defaultChecked={checked(settings.widget_form_show_company)} className="h-5 w-5" />
-                    Company
-                  </label>
-                  <label className="flex items-center gap-3 rounded-xl bg-white p-3 text-sm font-semibold text-slate-700">
-                    <input name="widget_form_show_service_needed" type="checkbox" defaultChecked={checked(settings.widget_form_show_service_needed)} className="h-5 w-5" />
-                    Service Needed
-                  </label>
-                  <label className="flex items-center gap-3 rounded-xl bg-white p-3 text-sm font-semibold text-slate-700">
-                    <input name="widget_form_show_preferred_timeline" type="checkbox" defaultChecked={checked(settings.widget_form_show_preferred_timeline)} className="h-5 w-5" />
-                    Preferred Timeline
-                  </label>
-                  <label className="flex items-center gap-3 rounded-xl bg-white p-3 text-sm font-semibold text-slate-700 md:col-span-2">
-                    <input name="widget_form_show_message" type="checkbox" defaultChecked={checked(settings.widget_form_show_message)} className="h-5 w-5" />
-                    Message
-                  </label>
-                </div>
+              <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-900 md:col-span-2">
+                Widget form fields are now managed on the <Link href="/client/form-builder" className="font-black underline">Form Builder</Link> page.
               </div>
 
               <label className="block text-sm font-semibold text-slate-700">
