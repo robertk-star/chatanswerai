@@ -8,7 +8,7 @@
   const sourceUrl = window.location.href;
   const sourceDomain = window.location.hostname;
 
-  window.CHATARAI_WIDGET_VERSION = "chatarai-form-fields-20260610e";
+  window.CHATARAI_WIDGET_VERSION = "chatarai-form-builder-20260610f";
   window.CHATARAI_WIDGET_API_BASE = baseUrl;
 
   const DEFAULT_QUICK_QUESTIONS = [
@@ -18,14 +18,19 @@
     "Can I request information?",
   ];
 
-  const DEFAULT_FORM_FIELDS = {
-    name: true,
-    email: true,
-    phone: true,
-    company: true,
-    serviceNeeded: true,
-    preferredTimeline: true,
-    message: true,
+  const LEGACY_FIELD_DEFS = [
+    { key: "name", label: "Name", type: "text", placeholder: "Your name", required: true },
+    { key: "email", label: "Email", type: "email", placeholder: "you@example.com", required: false },
+    { key: "phone", label: "Phone", type: "phone", placeholder: "Best phone number", required: true },
+    { key: "company", label: "Company", type: "text", placeholder: "Company name, if applicable", required: false },
+    { key: "service_needed", label: "Service needed", type: "text", placeholder: "Tell us what you need help with", required: false },
+    { key: "preferred_timeline", label: "Preferred timeline", type: "select", placeholder: "", options: ["ASAP", "This week", "Within 30 days", "1–3 months", "Just researching"], required: false },
+    { key: "message", label: "Message", type: "textarea", placeholder: "Share any details that may help the team respond.", required: false },
+  ];
+
+  const LEGACY_KEY_MAP = {
+    serviceNeeded: "service_needed",
+    preferredTimeline: "preferred_timeline",
   };
 
   const DEFAULT_SETTINGS = {
@@ -41,7 +46,7 @@
     widgetShowCallButton: true,
     widgetCallButtonText: "Call Now",
     widgetQuickQuestions: DEFAULT_QUICK_QUESTIONS,
-    widgetFormFields: DEFAULT_FORM_FIELDS,
+    formFields: [],
     businessPhone: "",
   };
 
@@ -57,15 +62,7 @@
         content: "Hi! I can answer questions about this business and help collect a service inquiry. What can I help you with today?",
       },
     ],
-    form: {
-      name: "",
-      email: "",
-      phone: "",
-      company: "",
-      serviceNeeded: "",
-      message: "",
-      preferredTimeline: "",
-    },
+    form: {},
     formError: "",
   };
 
@@ -95,25 +92,38 @@
           settings.widgetQuickQuestion4 || settings.widget_quick_question_4,
         ];
 
-    const cleaned = questions
-      .map((question) => String(question || "").trim())
-      .filter(Boolean)
-      .slice(0, 4);
-
+    const cleaned = questions.map((question) => String(question || "").trim()).filter(Boolean).slice(0, 4);
     return cleaned.length ? cleaned : DEFAULT_QUICK_QUESTIONS;
   }
 
-  function getFormFields(settings = state.settings) {
+  function legacyVisibleFields(settings) {
     const fields = settings.widgetFormFields || settings.widget_form_fields || {};
-    return {
-      name: fields.name ?? settings.widgetFormShowName ?? settings.widget_form_show_name ?? DEFAULT_FORM_FIELDS.name,
-      email: fields.email ?? settings.widgetFormShowEmail ?? settings.widget_form_show_email ?? DEFAULT_FORM_FIELDS.email,
-      phone: fields.phone ?? settings.widgetFormShowPhone ?? settings.widget_form_show_phone ?? DEFAULT_FORM_FIELDS.phone,
-      company: fields.company ?? settings.widgetFormShowCompany ?? settings.widget_form_show_company ?? DEFAULT_FORM_FIELDS.company,
-      serviceNeeded: fields.serviceNeeded ?? settings.widgetFormShowServiceNeeded ?? settings.widget_form_show_service_needed ?? DEFAULT_FORM_FIELDS.serviceNeeded,
-      preferredTimeline: fields.preferredTimeline ?? settings.widgetFormShowPreferredTimeline ?? settings.widget_form_show_preferred_timeline ?? DEFAULT_FORM_FIELDS.preferredTimeline,
-      message: fields.message ?? settings.widgetFormShowMessage ?? settings.widget_form_show_message ?? DEFAULT_FORM_FIELDS.message,
-    };
+    const isOn = (key) => fields[key] ?? settings[`widgetFormShow${key[0].toUpperCase()}${key.slice(1)}`] ?? true;
+    return LEGACY_FIELD_DEFS.filter((field) => {
+      if (field.key === "service_needed") return isOn("serviceNeeded");
+      if (field.key === "preferred_timeline") return isOn("preferredTimeline");
+      return isOn(field.key);
+    });
+  }
+
+  function getActiveFormFields(settings = state.settings) {
+    const builderFields = Array.isArray(settings.formFields) ? settings.formFields : [];
+    const cleaned = builderFields
+      .map((field, index) => ({
+        key: String(field.key || field.field_key || "").trim(),
+        label: String(field.label || "Field").trim(),
+        type: String(field.type || field.field_type || "text").trim(),
+        placeholder: String(field.placeholder || "").trim(),
+        options: Array.isArray(field.options)
+          ? field.options.map((option) => String(option || "").trim()).filter(Boolean)
+          : String(field.options || "").split(/\r?\n|,/).map((option) => option.trim()).filter(Boolean),
+        required: Boolean(field.required || field.is_required),
+        sortOrder: Number(field.sortOrder ?? field.sort_order ?? index),
+      }))
+      .filter((field) => field.key && field.label)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+
+    return cleaned.length ? cleaned : legacyVisibleFields(settings);
   }
 
   function applyStyles() {
@@ -199,7 +209,7 @@
         widgetShowCallButton: settings.widgetShowCallButton ?? settings.widget_show_call_button ?? state.settings.widgetShowCallButton,
         widgetCallButtonText: settings.widgetCallButtonText || settings.widget_call_button_text || state.settings.widgetCallButtonText,
         widgetQuickQuestions: cleanQuickQuestions(settings),
-        widgetFormFields: getFormFields(settings),
+        formFields: Array.isArray(settings.formFields) ? settings.formFields : [],
         businessPhone: settings.businessPhone || settings.phone || settings.business_phone || state.settings.businessPhone,
       };
     } catch (_) {}
@@ -222,13 +232,27 @@
   }
 
   function validateForm() {
-    const fields = getFormFields();
-    if (fields.name && !state.form.name.trim()) return "Name is required.";
-    if (fields.phone && !state.form.phone.trim()) return "Phone number is required.";
-    if ((fields.serviceNeeded || fields.message) && !state.form.serviceNeeded.trim() && !state.form.message.trim()) {
-      return "Service needed or message is required.";
+    const fields = getActiveFormFields();
+    for (const field of fields) {
+      if (field.required && !String(state.form[field.key] || "").trim()) {
+        return `${field.label} is required.`;
+      }
     }
     return "";
+  }
+
+  function canonicalPayloadFromForm() {
+    const customFields = { ...state.form };
+    return {
+      name: state.form.name || "",
+      email: state.form.email || "",
+      phone: state.form.phone || "",
+      company: state.form.company || "",
+      serviceNeeded: state.form.service_needed || state.form.serviceNeeded || "",
+      preferredTimeline: state.form.preferred_timeline || state.form.preferredTimeline || "",
+      message: state.form.message || "",
+      customFields,
+    };
   }
 
   async function submitLead() {
@@ -240,23 +264,11 @@
     render();
 
     try {
-      const fields = getFormFields();
-      const payload = {
-        conversationId: state.conversationId,
-        siteId,
-        name: fields.name ? state.form.name : "",
-        email: fields.email ? state.form.email : "",
-        phone: fields.phone ? state.form.phone : "",
-        company: fields.company ? state.form.company : "",
-        serviceNeeded: fields.serviceNeeded ? state.form.serviceNeeded : "",
-        preferredTimeline: fields.preferredTimeline ? state.form.preferredTimeline : "",
-        message: fields.message ? state.form.message : "",
-        sourceUrl,
-      };
+      const payload = canonicalPayloadFromForm();
       const res = await fetch(`${baseUrl}/api/leads`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ conversationId: state.conversationId, siteId, ...payload, sourceUrl }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Lead could not be submitted.");
@@ -330,40 +342,46 @@
     return [chat, composer];
   }
 
-  function field(label, key, placeholder, type = "text") {
-    return el("div", { class: "chatarai-field" }, [el("label", {}, [label]), el("input", { type, placeholder, value: state.form[key] || "", oninput: (e) => updateForm(key, e.currentTarget.value) })]);
+  function renderInputForField(field) {
+    const common = {
+      placeholder: field.placeholder || "",
+      value: state.form[field.key] || "",
+      oninput: (e) => updateForm(field.key, e.currentTarget.value),
+    };
+
+    if (field.type === "textarea") return el("textarea", common, [state.form[field.key] || ""]);
+
+    if (field.type === "select" || field.type === "yes_no") {
+      const options = field.type === "yes_no" ? ["Yes", "No"] : field.options || [];
+      const select = el("select", { onchange: (e) => updateForm(field.key, e.currentTarget.value) });
+      select.appendChild(el("option", { value: "" }, [field.placeholder || "Select one"]));
+      options.forEach((option) => {
+        const opt = el("option", { value: option }, [option]);
+        if ((state.form[field.key] || "") === option) opt.selected = true;
+        select.appendChild(opt);
+      });
+      return select;
+    }
+
+    const inputType = field.type === "phone" ? "tel" : field.type === "number" ? "number" : field.type;
+    return el("input", { ...common, type: inputType || "text" });
   }
 
-  function textareaField(label, key, placeholder) {
-    return el("div", { class: "chatarai-field" }, [el("label", {}, [label]), el("textarea", { placeholder, oninput: (e) => updateForm(key, e.currentTarget.value) }, [state.form[key] || ""])]);
-  }
-
-  function selectField(label, key, options) {
-    const select = el("select", { onchange: (e) => updateForm(key, e.currentTarget.value) });
-    options.forEach((option) => {
-      const opt = el("option", { value: option }, [option || "Select one"]);
-      if ((state.form[key] || "") === option) opt.selected = true;
-      select.appendChild(opt);
-    });
-    return el("div", { class: "chatarai-field" }, [el("label", {}, [label]), select]);
+  function renderDynamicField(field) {
+    return el("div", { class: "chatarai-field" }, [
+      el("label", {}, [`${field.label}${field.required ? " *" : ""}`]),
+      renderInputForField(field),
+    ]);
   }
 
   function renderFormBody() {
-    const fields = getFormFields();
     const formNodes = [
       el("div", { class: "chatarai-form-title" }, ["Send a service inquiry"]),
       state.formError ? el("div", { class: "chatarai-error" }, [state.formError]) : null,
       el("div", { class: "chatarai-help" }, ["Share the details requested below and the team can follow up."]),
     ];
 
-    if (fields.name) formNodes.push(field("Name *", "name", "Your name"));
-    if (fields.email) formNodes.push(field("Email", "email", "you@example.com", "email"));
-    if (fields.phone) formNodes.push(field("Phone *", "phone", "Best phone number"));
-    if (fields.company) formNodes.push(field("Company", "company", "Company name, if applicable"));
-    if (fields.serviceNeeded) formNodes.push(field("Service needed *", "serviceNeeded", "Tell us what you need help with"));
-    if (fields.preferredTimeline) formNodes.push(selectField("Preferred timeline", "preferredTimeline", ["", "ASAP", "This week", "Within 30 days", "1–3 months", "Just researching"]));
-    if (fields.message) formNodes.push(textareaField("Message *", "message", "Share any details that may help the team respond."));
-
+    getActiveFormFields().forEach((field) => formNodes.push(renderDynamicField(field)));
     formNodes.push(el("button", { class: "chatarai-primary", type: "button", disabled: state.loading, onclick: submitLead }, [state.loading ? "Submitting..." : "Submit Inquiry"]));
     formNodes.push(el("button", { class: "chatarai-secondary", type: "button", style: { marginTop: "10px", color: "#334155", borderColor: "#cbd5e1", background: "#fff" }, onclick: () => setView("chat") }, ["Back to chat"]));
 
