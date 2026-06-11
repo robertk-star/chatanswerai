@@ -39,14 +39,16 @@ export function normalizeWebsite(value: string) {
 
 export function normalizeDomainInput(input: string) {
   return input
+    .replace(/\\n/g, "\n")
     .split(/\r?\n|,/)
     .map((item) => normalizeDomain(item))
     .filter(Boolean)
-    .join("\\n");
+    .join("\n");
 }
 
 export function parseLines(input: string) {
   return input
+    .replace(/\\n/g, "\n")
     .split(/\r?\n|,/)
     .map((item) => item.trim())
     .filter(Boolean);
