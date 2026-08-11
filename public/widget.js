@@ -8,9 +8,10 @@
   const sourceUrl = window.location.href;
   const sourceDomain = window.location.hostname;
 
-  window.CHATARAI_WIDGET_VERSION = "chatarai-form-builder-20260610f";
+  window.CHATARAI_WIDGET_VERSION = "welcome-message-canonical-api-20260811a";
   window.CHATARAI_WIDGET_API_BASE = baseUrl;
 
+  const DEFAULT_WELCOME_MESSAGE = "Hi! I can answer questions about this business and help collect a service inquiry. What can I help you with today?";
   const DEFAULT_QUICK_QUESTIONS = [
     "What services do you offer?",
     "What areas do you serve?",
@@ -28,14 +29,10 @@
     { key: "message", label: "Message", type: "textarea", placeholder: "Share any details that may help the team respond.", required: false },
   ];
 
-  const LEGACY_KEY_MAP = {
-    serviceNeeded: "service_needed",
-    preferredTimeline: "preferred_timeline",
-  };
-
   const DEFAULT_SETTINGS = {
     widgetTitle: "Service Inquiry Assistant",
     widgetSubtitle: "Answers questions and collects service inquiries",
+    widgetWelcomeMessage: DEFAULT_WELCOME_MESSAGE,
     widgetBubbleText: "Questions? Chat with us",
     widgetQuoteButtonText: "Request Information",
     widgetSuccessMessage: "Thanks. Your information was received. Someone from the team can review the details and follow up.",
@@ -56,12 +53,7 @@
     loading: false,
     settings: { ...DEFAULT_SETTINGS },
     conversationId: null,
-    messages: [
-      {
-        role: "assistant",
-        content: "Hi! I can answer questions about this business and help collect a service inquiry. What can I help you with today?",
-      },
-    ],
+    messages: [{ role: "assistant", content: DEFAULT_WELCOME_MESSAGE }],
     form: {},
     formError: "",
   };
@@ -91,7 +83,6 @@
           settings.widgetQuickQuestion3 || settings.widget_quick_question_3,
           settings.widgetQuickQuestion4 || settings.widget_quick_question_4,
         ];
-
     const cleaned = questions.map((question) => String(question || "").trim()).filter(Boolean).slice(0, 4);
     return cleaned.length ? cleaned : DEFAULT_QUICK_QUESTIONS;
   }
@@ -122,7 +113,6 @@
       }))
       .filter((field) => field.key && field.label)
       .sort((a, b) => a.sortOrder - b.sortOrder);
-
     return cleaned.length ? cleaned : legacyVisibleFields(settings);
   }
 
@@ -177,6 +167,12 @@
     document.head.appendChild(style);
   }
 
+  function resetInitialAssistantMessage() {
+    const welcome = String(state.settings.widgetWelcomeMessage || DEFAULT_SETTINGS.widgetWelcomeMessage || DEFAULT_WELCOME_MESSAGE).trim() || DEFAULT_WELCOME_MESSAGE;
+    const hasOnlyInitialAssistant = state.messages.length === 1 && state.messages[0]?.role === "assistant";
+    if (hasOnlyInitialAssistant) state.messages[0].content = welcome;
+  }
+
   async function track(eventType, metadata = {}) {
     try {
       await fetch(`${baseUrl}/api/widget/events`, {
@@ -199,6 +195,7 @@
         ...state.settings,
         widgetTitle: settings.widgetTitle || settings.widget_title || settings.title || state.settings.widgetTitle,
         widgetSubtitle: settings.widgetSubtitle || settings.widget_subtitle || settings.subtitle || state.settings.widgetSubtitle,
+        widgetWelcomeMessage: settings.widgetWelcomeMessage || settings.widget_welcome_message || state.settings.widgetWelcomeMessage,
         widgetBubbleText: settings.widgetBubbleText || settings.widget_bubble_text || settings.bubbleText || state.settings.widgetBubbleText,
         widgetQuoteButtonText: settings.widgetQuoteButtonText || settings.widget_quote_button_text || settings.quoteButtonText || state.settings.widgetQuoteButtonText,
         widgetSuccessMessage: settings.widgetSuccessMessage || settings.widget_success_message || state.settings.widgetSuccessMessage,
@@ -212,6 +209,7 @@
         formFields: Array.isArray(settings.formFields) ? settings.formFields : [],
         businessPhone: settings.businessPhone || settings.phone || settings.business_phone || state.settings.businessPhone,
       };
+      resetInitialAssistantMessage();
     } catch (_) {}
   }
 
@@ -227,16 +225,12 @@
     render();
   }
 
-  function updateForm(key, value) {
-    state.form[key] = value;
-  }
+  function updateForm(key, value) { state.form[key] = value; }
 
   function validateForm() {
     const fields = getActiveFormFields();
     for (const field of fields) {
-      if (field.required && !String(state.form[field.key] || "").trim()) {
-        return `${field.label} is required.`;
-      }
+      if (field.required && !String(state.form[field.key] || "").trim()) return `${field.label} is required.`;
     }
     return "";
   }
@@ -343,14 +337,8 @@
   }
 
   function renderInputForField(field) {
-    const common = {
-      placeholder: field.placeholder || "",
-      value: state.form[field.key] || "",
-      oninput: (e) => updateForm(field.key, e.currentTarget.value),
-    };
-
+    const common = { placeholder: field.placeholder || "", value: state.form[field.key] || "", oninput: (e) => updateForm(field.key, e.currentTarget.value) };
     if (field.type === "textarea") return el("textarea", common, [state.form[field.key] || ""]);
-
     if (field.type === "select" || field.type === "yes_no") {
       const options = field.type === "yes_no" ? ["Yes", "No"] : field.options || [];
       const select = el("select", { onchange: (e) => updateForm(field.key, e.currentTarget.value) });
@@ -362,16 +350,12 @@
       });
       return select;
     }
-
     const inputType = field.type === "phone" ? "tel" : field.type === "number" ? "number" : field.type;
     return el("input", { ...common, type: inputType || "text" });
   }
 
   function renderDynamicField(field) {
-    return el("div", { class: "chatarai-field" }, [
-      el("label", {}, [`${field.label}${field.required ? " *" : ""}`]),
-      renderInputForField(field),
-    ]);
+    return el("div", { class: "chatarai-field" }, [el("label", {}, [`${field.label}${field.required ? " *" : ""}`]), renderInputForField(field)]);
   }
 
   function renderFormBody() {
@@ -380,11 +364,9 @@
       state.formError ? el("div", { class: "chatarai-error" }, [state.formError]) : null,
       el("div", { class: "chatarai-help" }, ["Share the details requested below and the team can follow up."]),
     ];
-
     getActiveFormFields().forEach((field) => formNodes.push(renderDynamicField(field)));
     formNodes.push(el("button", { class: "chatarai-primary", type: "button", disabled: state.loading, onclick: submitLead }, [state.loading ? "Submitting..." : "Submit Inquiry"]));
     formNodes.push(el("button", { class: "chatarai-secondary", type: "button", style: { marginTop: "10px", color: "#334155", borderColor: "#cbd5e1", background: "#fff" }, onclick: () => setView("chat") }, ["Back to chat"]));
-
     return [el("div", { class: "chatarai-form" }, formNodes)];
   }
 
