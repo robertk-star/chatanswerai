@@ -7,14 +7,9 @@ function value(formData: FormData, key: string) {
   return String(formData.get(key) || "").trim();
 }
 
-function redirectWithMessage(
-  request: Request,
-  kind: "saved" | "error",
-  message?: string,
-) {
+function redirectWithMessage(request: Request, kind: "saved" | "error", message?: string) {
   const url = new URL("/client/settings", request.url);
-  if (kind === "saved")
-    url.searchParams.set("saved", message || "Settings saved.");
+  if (kind === "saved") url.searchParams.set("saved", message || "Settings saved.");
   else url.searchParams.set("error", message || "Settings could not be saved.");
   return NextResponse.redirect(url, { status: 303 });
 }
@@ -32,21 +27,10 @@ function isChecked(formData: FormData, key: string) {
 
 function cleanDbMessage(message?: string | null) {
   if (!message) return "Database update failed.";
-  if (message.includes("multiple (or no) rows returned")) {
-    return "More than one settings row exists for this business. This has been handled in the updated save route; reload and try again.";
-  }
-  if (
-    message.includes("business_settings_business_id") ||
-    message.includes("ON CONFLICT")
-  ) {
-    return "The business_settings table is missing the multi-business unique index. Run sql/017_multibusiness_settings_fix.sql.";
-  }
-  if (message.includes("singleton_key") && message.includes("duplicate")) {
-    return "The old singleton settings constraint is still active. Run sql/017_multibusiness_settings_fix.sql.";
-  }
-  if (message.includes("column") && message.includes("does not exist")) {
-    return `Settings table is missing a required column: ${message}`;
-  }
+  if (message.includes("multiple (or no) rows returned")) return "More than one settings row exists for this business. This has been handled in the updated save route; reload and try again.";
+  if (message.includes("business_settings_business_id") || message.includes("ON CONFLICT")) return "The business_settings table is missing the multi-business unique index. Run sql/017_multibusiness_settings_fix.sql.";
+  if (message.includes("singleton_key") && message.includes("duplicate")) return "The old singleton settings constraint is still active. Run sql/017_multibusiness_settings_fix.sql.";
+  if (message.includes("column") && message.includes("does not exist")) return `Settings table is missing a required column: ${message}`;
   return message;
 }
 
@@ -54,97 +38,55 @@ export async function POST(request: Request) {
   const cookieStore = await cookies();
   const token = cookieStore.get(clientCookieName())?.value;
   const session = verifyClientSessionToken(token);
-  if (!session) {
-    return NextResponse.redirect(new URL("/client/login", request.url), {
-      status: 303,
-    });
-  }
+  if (!session) return NextResponse.redirect(new URL("/client/login", request.url), { status: 303 });
 
   const supabase = getSupabaseAdmin();
-  if (!supabase) {
-    return redirectWithMessage(request, "error", "Supabase is not configured.");
-  }
-
-  if (!session.businessId) {
-    return redirectWithMessage(
-      request,
-      "error",
-      "Your client account is not attached to a business.",
-    );
-  }
+  if (!supabase) return redirectWithMessage(request, "error", "Supabase is not configured.");
+  if (!session.businessId) return redirectWithMessage(request, "error", "Your client account is not attached to a business.");
 
   const formData = await request.formData();
   const businessName = value(formData, "business_name");
   const phone = value(formData, "phone");
   const website = value(formData, "website");
   const primaryMarket = value(formData, "primary_market");
-  const businessType =
-    value(formData, "business_type") || "General Service Business";
+  const businessType = value(formData, "business_type") || "General Service Business";
   const businessDescription = value(formData, "description");
   const servicesOffered = value(formData, "services_offered");
   const servicesNotOffered = value(formData, "services_not_offered");
   const serviceArea = value(formData, "service_area");
   const targetCustomer = value(formData, "target_customer");
   const customAiInstructions = value(formData, "custom_ai_instructions");
-  const importantDisclaimersOrLimits = value(
-    formData,
-    "important_disclaimers_or_limits",
-  );
+  const importantDisclaimersOrLimits = value(formData, "important_disclaimers_or_limits");
   const chatCtaText = value(formData, "chat_cta_text");
-  const widgetTitle =
-    value(formData, "widget_title") || "Service Inquiry Assistant";
-  const widgetSubtitle =
-    value(formData, "widget_subtitle") ||
-    "Answers questions and collects service inquiries";
-  const widgetQuoteButtonText =
-    value(formData, "widget_quote_button_text") || "Request Information";
-  const widgetCallButtonText =
-    value(formData, "widget_call_button_text") || "Call Now";
+  const widgetTitle = value(formData, "widget_title") || "Service Inquiry Assistant";
+  const widgetSubtitle = value(formData, "widget_subtitle") || "Answers questions and collects service inquiries";
+  const widgetWelcomeMessage = value(formData, "widget_welcome_message") || "Hi! I can answer questions about this business and help collect a service inquiry. What can I help you with today?";
+  const widgetQuoteButtonText = value(formData, "widget_quote_button_text") || "Request Information";
+  const widgetCallButtonText = value(formData, "widget_call_button_text") || "Call Now";
   const widgetQuickQuestion1 = value(formData, "widget_quick_question_1");
   const widgetQuickQuestion2 = value(formData, "widget_quick_question_2");
   const widgetQuickQuestion3 = value(formData, "widget_quick_question_3");
   const widgetQuickQuestion4 = value(formData, "widget_quick_question_4");
   const widgetShowCallButton = isChecked(formData, "widget_show_call_button");
-  const widgetHeaderColor = cleanHexColor(
-    value(formData, "widget_header_color"),
-    "#0f172a",
-  );
-  const widgetHeaderTextColor = cleanHexColor(
-    value(formData, "widget_header_text_color"),
-    "#ffffff",
-  );
-  const widgetButtonColor = cleanHexColor(
-    value(formData, "widget_button_color"),
-    "#f5b51b",
-  );
-  const widgetButtonTextColor = cleanHexColor(
-    value(formData, "widget_button_text_color"),
-    "#0f172a",
-  );
+  const widgetHeaderColor = cleanHexColor(value(formData, "widget_header_color"), "#0f172a");
+  const widgetHeaderTextColor = cleanHexColor(value(formData, "widget_header_text_color"), "#ffffff");
+  const widgetButtonColor = cleanHexColor(value(formData, "widget_button_color"), "#f5b51b");
+  const widgetButtonTextColor = cleanHexColor(value(formData, "widget_button_text_color"), "#0f172a");
   const now = new Date().toISOString();
 
-  if (!businessName) {
-    return redirectWithMessage(request, "error", "Business name is required.");
-  }
+  if (!businessName) return redirectWithMessage(request, "error", "Business name is required.");
 
-  const businessUpdate = await supabase
-    .from("businesses")
-    .update({
-      name: businessName,
-      phone,
-      website,
-      primary_market: primaryMarket,
-      description: businessDescription,
-      updated_at: now,
-    })
-    .eq("id", session.businessId);
+  const businessUpdate = await supabase.from("businesses").update({
+    name: businessName,
+    phone,
+    website,
+    primary_market: primaryMarket,
+    description: businessDescription,
+    updated_at: now,
+  }).eq("id", session.businessId);
 
   if (businessUpdate.error) {
-    return redirectWithMessage(
-      request,
-      "error",
-      `Business profile could not be saved: ${cleanDbMessage(businessUpdate.error.message)}`,
-    );
+    return redirectWithMessage(request, "error", `Business profile could not be saved: ${cleanDbMessage(businessUpdate.error.message)}`);
   }
 
   const settingsPayload = {
@@ -165,6 +107,7 @@ export async function POST(request: Request) {
     chat_cta_text: chatCtaText,
     widget_title: widgetTitle,
     widget_subtitle: widgetSubtitle,
+    widget_welcome_message: widgetWelcomeMessage,
     widget_quote_button_text: widgetQuoteButtonText,
     widget_quick_question_1: widgetQuickQuestion1,
     widget_quick_question_2: widgetQuickQuestion2,
@@ -179,51 +122,16 @@ export async function POST(request: Request) {
     updated_at: now,
   };
 
-  const existingSettings = await supabase
-    .from("business_settings")
-    .select("id")
-    .eq("business_id", session.businessId)
-    .order("updated_at", { ascending: false });
-
-  if (existingSettings.error) {
-    return redirectWithMessage(
-      request,
-      "error",
-      `Settings row could not be checked: ${cleanDbMessage(existingSettings.error.message)}`,
-    );
-  }
+  const existingSettings = await supabase.from("business_settings").select("id").eq("business_id", session.businessId).order("updated_at", { ascending: false });
+  if (existingSettings.error) return redirectWithMessage(request, "error", `Settings row could not be checked: ${cleanDbMessage(existingSettings.error.message)}`);
 
   if ((existingSettings.data || []).length > 0) {
-    const settingsUpdate = await supabase
-      .from("business_settings")
-      .update(settingsPayload)
-      .eq("business_id", session.businessId);
-
-    if (settingsUpdate.error) {
-      return redirectWithMessage(
-        request,
-        "error",
-        `Widget settings could not be saved: ${cleanDbMessage(settingsUpdate.error.message)}`,
-      );
-    }
+    const settingsUpdate = await supabase.from("business_settings").update(settingsPayload).eq("business_id", session.businessId);
+    if (settingsUpdate.error) return redirectWithMessage(request, "error", `Widget settings could not be saved: ${cleanDbMessage(settingsUpdate.error.message)}`);
   } else {
-    const settingsInsert = await supabase.from("business_settings").insert({
-      ...settingsPayload,
-      singleton_key: session.businessId,
-    });
-
-    if (settingsInsert.error) {
-      return redirectWithMessage(
-        request,
-        "error",
-        `Widget settings row could not be created: ${cleanDbMessage(settingsInsert.error.message)}`,
-      );
-    }
+    const settingsInsert = await supabase.from("business_settings").insert({ ...settingsPayload, singleton_key: session.businessId });
+    if (settingsInsert.error) return redirectWithMessage(request, "error", `Widget settings row could not be created: ${cleanDbMessage(settingsInsert.error.message)}`);
   }
 
-  return redirectWithMessage(
-    request,
-    "saved",
-    "Settings saved. The widget may need a hard refresh or updated embed script if the external site was using an old widget.js URL.",
-  );
+  return redirectWithMessage(request, "saved", "Settings saved. The widget may need a hard refresh or updated embed script if the external site was using an old widget.js URL.");
 }
