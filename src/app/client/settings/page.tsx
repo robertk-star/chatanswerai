@@ -19,6 +19,9 @@ const BUSINESS_TYPE_OPTIONS = [
   "Auto Services",
 ];
 
+const defaultWelcomeMessage =
+  "Hi! I can answer questions about this business and help collect a service inquiry. What can I help you with today?";
+
 type ClientSettingsSearchParams = {
   saved?: string;
   error?: string;
@@ -68,10 +71,8 @@ export default async function ClientSettingsPage({
     business = br.data || {};
     settings = Array.isArray(sr.data) ? sr.data[0] || {} : sr.data || {};
 
-    if (br.error)
-      errorMessage = `Business profile could not be loaded: ${br.error.message}`;
-    else if (sr.error)
-      errorMessage = `Widget settings could not be loaded: ${sr.error.message}`;
+    if (br.error) errorMessage = `Business profile could not be loaded: ${br.error.message}`;
+    else if (sr.error) errorMessage = `Widget settings could not be loaded: ${sr.error.message}`;
   }
 
   return (
@@ -93,16 +94,8 @@ export default async function ClientSettingsPage({
       </header>
 
       <section className="mx-auto max-w-5xl px-6 py-8">
-        {savedMessage && (
-          <div className="mb-6 rounded-2xl bg-green-50 p-4 text-sm text-green-800">
-            {savedMessage}
-          </div>
-        )}
-        {errorMessage && (
-          <div className="mb-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700">
-            {errorMessage}
-          </div>
-        )}
+        {savedMessage && <div className="mb-6 rounded-2xl bg-green-50 p-4 text-sm text-green-800">{savedMessage}</div>}
+        {errorMessage && <div className="mb-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700">{errorMessage}</div>}
 
         <form action="/api/client/settings" method="post" className="space-y-6">
           <div className="rounded-[2rem] bg-white p-6 shadow-soft ring-1 ring-slate-200">
@@ -127,9 +120,7 @@ export default async function ClientSettingsPage({
               <label className="block text-sm font-semibold text-slate-700">
                 Business Type
                 <select name="business_type" defaultValue={settings.business_type || "General Service Business"} className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3">
-                  {BUSINESS_TYPE_OPTIONS.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
+                  {BUSINESS_TYPE_OPTIONS.map((type) => <option key={type} value={type}>{type}</option>)}
                 </select>
               </label>
               <label className="block text-sm font-semibold text-slate-700 md:col-span-2">
@@ -158,10 +149,8 @@ export default async function ClientSettingsPage({
               </label>
               <label className="block text-sm font-semibold text-slate-700 md:col-span-2">
                 Default Chat CTA Text
-                <textarea name="chat_cta_text" defaultValue={settings.chat_cta_text || ""} placeholder="Example: Use the request button to tell the SaffHire team what type of screening you need." className="mt-1 min-h-20 w-full rounded-xl border border-slate-300 px-4 py-3" />
-                <span className="mt-1 block text-xs text-slate-500">
-                  This is the short call-to-action added to chat answers when the answer does not already include one.
-                </span>
+                <textarea name="chat_cta_text" defaultValue={settings.chat_cta_text || ""} placeholder="Example: Use the request button to tell the team what type of service you need." className="mt-1 min-h-20 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                <span className="mt-1 block text-xs text-slate-500">This is the short call-to-action added to chat answers when the answer does not already include one.</span>
               </label>
               <label className="block text-sm font-semibold text-slate-700 md:col-span-2">
                 Important Disclaimers or Limits
@@ -181,6 +170,11 @@ export default async function ClientSettingsPage({
                 Widget Subtitle
                 <input name="widget_subtitle" defaultValue={settings.widget_subtitle || "Answers questions and collects service inquiries"} className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
               </label>
+              <label className="block text-sm font-semibold text-slate-700 md:col-span-2">
+                Widget Welcome Message
+                <textarea name="widget_welcome_message" defaultValue={settings.widget_welcome_message || defaultWelcomeMessage} className="mt-1 min-h-28 w-full rounded-xl border border-slate-300 px-4 py-3" />
+                <span className="mt-1 block text-xs text-slate-500">This controls the first message shown inside the chat body when the widget opens.</span>
+              </label>
               <label className="block text-sm font-semibold text-slate-700">
                 Request Button Text
                 <input name="widget_quote_button_text" defaultValue={settings.widget_quote_button_text || "Request Information"} className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
@@ -192,26 +186,12 @@ export default async function ClientSettingsPage({
 
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
                 <h3 className="text-sm font-black uppercase tracking-wide text-slate-600">Common Question Buttons</h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  Add up to 4 quick questions that appear inside the widget. Leave blank to use the default question buttons.
-                </p>
+                <p className="mt-1 text-sm text-slate-500">Add up to 4 quick questions that appear inside the widget. Leave blank to use the default question buttons.</p>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  <label className="block text-sm font-semibold text-slate-700">
-                    Question Button 1
-                    <input name="widget_quick_question_1" defaultValue={settings.widget_quick_question_1 || ""} placeholder="What services do you offer?" className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
-                  </label>
-                  <label className="block text-sm font-semibold text-slate-700">
-                    Question Button 2
-                    <input name="widget_quick_question_2" defaultValue={settings.widget_quick_question_2 || ""} placeholder="What areas do you serve?" className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
-                  </label>
-                  <label className="block text-sm font-semibold text-slate-700">
-                    Question Button 3
-                    <input name="widget_quick_question_3" defaultValue={settings.widget_quick_question_3 || ""} placeholder="How fast can someone follow up?" className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
-                  </label>
-                  <label className="block text-sm font-semibold text-slate-700">
-                    Question Button 4
-                    <input name="widget_quick_question_4" defaultValue={settings.widget_quick_question_4 || ""} placeholder="Can I request information?" className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" />
-                  </label>
+                  <label className="block text-sm font-semibold text-slate-700">Question Button 1<input name="widget_quick_question_1" defaultValue={settings.widget_quick_question_1 || ""} placeholder="What services do you offer?" className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" /></label>
+                  <label className="block text-sm font-semibold text-slate-700">Question Button 2<input name="widget_quick_question_2" defaultValue={settings.widget_quick_question_2 || ""} placeholder="What areas do you serve?" className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" /></label>
+                  <label className="block text-sm font-semibold text-slate-700">Question Button 3<input name="widget_quick_question_3" defaultValue={settings.widget_quick_question_3 || ""} placeholder="How fast can someone follow up?" className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" /></label>
+                  <label className="block text-sm font-semibold text-slate-700">Question Button 4<input name="widget_quick_question_4" defaultValue={settings.widget_quick_question_4 || ""} placeholder="Can I request information?" className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3" /></label>
                 </div>
               </div>
 
@@ -240,14 +220,10 @@ export default async function ClientSettingsPage({
                 Show phone number / call button in the widget
               </label>
             </div>
-            <p className="mt-3 text-xs text-slate-500">
-              The header color only changes the top part of the widget. The body where the questions appear stays light.
-            </p>
+            <p className="mt-3 text-xs text-slate-500">The header color only changes the top part of the widget. The body where the questions appear stays light.</p>
           </div>
 
-          <button className="w-full rounded-full bg-gold px-7 py-4 font-bold text-navy" type="submit">
-            Save Client Settings
-          </button>
+          <button className="w-full rounded-full bg-gold px-7 py-4 font-bold text-navy" type="submit">Save Client Settings</button>
         </form>
       </section>
     </main>
