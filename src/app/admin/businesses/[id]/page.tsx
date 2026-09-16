@@ -14,6 +14,10 @@ import {
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Business Detail | ChatAnswerAI" };
 
+type BusinessSettingsRow = {
+  lead_notification_email?: string | null;
+};
+
 export default async function AdminBusinessDetailPage({
   params,
   searchParams,
@@ -73,9 +77,11 @@ export default async function AdminBusinessDetailPage({
   const sites = (sitesResult.data || []) as Array<any>;
   const users = (usersResult.data || []) as Array<any>;
   const leads = (leadsResult.data || []) as Array<any>;
-  const settings = Array.isArray(settingsResult.data)
-    ? settingsResult.data[0] || {}
-    : settingsResult.data || {};
+  const settingsRow = Array.isArray(settingsResult.data)
+    ? settingsResult.data[0]
+    : settingsResult.data;
+  const settings: BusinessSettingsRow = settingsRow || {};
+  const leadNotificationEmail = settings.lead_notification_email || "";
   const planName = normalizePlanName(business.plan_name);
   const maxSites = business.max_widget_sites || maxWidgetSitesForPlan(planName);
 
@@ -169,7 +175,7 @@ export default async function AdminBusinessDetailPage({
                 <input
                   name="lead_notification_email"
                   type="text"
-                  defaultValue={settings.lead_notification_email || ""}
+                  defaultValue={leadNotificationEmail}
                   placeholder="leads@example.com"
                   className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3"
                 />
@@ -197,7 +203,7 @@ export default async function AdminBusinessDetailPage({
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <div className="text-sm font-bold text-navy">Plan</div>
                 <p className="mt-1 text-xs text-slate-500">
-                  Current: {planLabel(planName)} · {sites.length}/{maxSites}{" "}
+                  Current: {planLabel(planName)} \u00b7 {sites.length}/{maxSites}{" "}
                   widget sites used.
                 </p>
                 <label className="mt-3 block text-sm font-semibold text-slate-700">
@@ -207,9 +213,9 @@ export default async function AdminBusinessDetailPage({
                     defaultValue={planName}
                     className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-4 py-3"
                   >
-                    <option value="starter">Starter — $49/mo, 1 site</option>
+                    <option value="starter">Starter \u2014 $49/mo, 1 site</option>
                     <option value="pro">
-                      Pro — $99/mo, up to 4 sites/accounts
+                      Pro \u2014 $99/mo, up to 4 sites/accounts
                     </option>
                   </select>
                 </label>
@@ -359,7 +365,7 @@ export default async function AdminBusinessDetailPage({
                         {lead.name || "Lead"}
                       </div>
                       <div className="text-sm text-slate-500">
-                        {lead.phone || "No phone"} ·{" "}
+                        {lead.phone || "No phone"} \u00b7{" "}
                         {lead.property_city || lead.service_needed || "No service info"}
                       </div>
                     </div>
