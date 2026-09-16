@@ -27,6 +27,7 @@ type NotificationResult = {
   skipped: boolean;
   sent: boolean;
   recipients: string[];
+  fromEmail?: string;
   error?: string;
 };
 
@@ -52,7 +53,13 @@ function escapeHtml(value?: string | null) {
 
 function textValue(value?: string | null) {
   const cleaned = String(value || "").trim();
-  return cleaned || "—";
+  return cleaned || "\u2014";
+}
+
+function getFromEmail() {
+  const configured = String(process.env.FROM_EMAIL || "").trim();
+  if (configured) return configured;
+  return "Chat Answer AI <beth.t@example.com>";
 }
 
 function getAppUrl() {
@@ -141,7 +148,7 @@ function buildLeadEmail({
   const leadUrl = `${appUrl}/client/leads/${lead.id}`;
   const adminLeadUrl = `${appUrl}/admin/leads/${lead.id}`;
   const safeBusinessName = textValue(businessName);
-  const subject = `New service inquiry: ${textValue(lead.name)}${lead.service_needed ? ` — ${lead.service_needed}` : ""}`;
+  const subject = `New service inquiry: ${textValue(lead.name)}${lead.service_needed ? ` \u2014 ${lead.service_needed}` : ""}`;
 
   const rows = [
     ["Name", lead.name],
@@ -211,8 +218,7 @@ export async function sendLeadEmailNotification({
   lead: LeadRow;
 }): Promise<NotificationResult> {
   const resendApiKey = process.env.RESEND_API_KEY;
-  const fromEmail =
-    process.env.FROM_EMAIL || "Chat Answer AI <leads@chatanswerai.com>";
+  const fromEmail = getFromEmail();
 
   const recipients = await getLeadNotificationRecipients(
     supabase,
@@ -224,7 +230,8 @@ export async function sendLeadEmailNotification({
       skipped: true,
       sent: false,
       recipients,
-      error: "RESEND_API_KEY is not configured.",
+      fromEmail,
+      error: "RESEND_API_KEY is not configured on this deployment.",
     };
   }
 
@@ -233,7 +240,9 @@ export async function sendLeadEmailNotification({
       skipped: true,
       sent: false,
       recipients,
-      error: "No notification recipients found.",
+      fromEmail,
+      error:
+        "No notification recipients found. Set Lead Notification Email on client/admin settings, or set LEAD_NOTIFICATION_EMAIL in Vercel.",
     };
   }
 
@@ -270,9 +279,10 @@ export async function sendLeadEmailNotification({
       skipped: false,
       sent: false,
       recipients,
+      fromEmail,
       error: `Resend failed with ${response.status}${detail ? `: ${detail}` : ""}`,
     };
   }
 
-  return { skipped: false, sent: true, recipients };
+  return { skipped: false, sent: true, recipients, fromEmail };
 }
