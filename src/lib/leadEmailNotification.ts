@@ -21,6 +21,14 @@ type LeadRow = {
   property_condition?: string | null;
   notes?: string | null;
   source_url?: string | null;
+  custom_fields?: Record<string, unknown> | null;
+};
+
+type FormField = {
+  field_key?: string | null;
+  label?: string | null;
+  sort_order?: number | null;
+  is_enabled?: boolean | null;
 };
 
 type NotificationResult = {
@@ -53,7 +61,11 @@ function escapeHtml(value?: string | null) {
 
 function textValue(value?: string | null) {
   const cleaned = String(value || "").trim();
-  return cleaned || "\u2014";
+  return cleaned || "-";
+}
+
+function toCamelCase(value: string) {
+  return value.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
 }
 
 function getFromEmail() {
@@ -137,41 +149,93 @@ async function getLeadNotificationRecipients(
   return uniqueEmails([...clientRecipients, ...envRecipients]);
 }
 
+async function getEnabledFormFields(
+  supabase: SupabaseClientLike,
+  businessId?: string | null,
+): Promise<FormField[]> {
+  if (!businessId) return [];
+
+  const { data, error } = await supabase
+    .from("widget_form_fields")
+    .select("field_key, label, sort_order, is_enabled")
+    .eq("business_id", businessId)
+    .eq("is_enabled", true)
+    .order("sort_order", { ascending: true });
+
+  if (error) return [];
+  return (data || []) as FormField[];
+}
+
+function getCanonicalValue(lead: LeadRow, fieldKey: string) {
+  const aliases: Record<string, string | null | undefined> = {
+    name: lead.name,
+    email: lead.email,
+    phone: lead.phone,
+    company: lead.company,
+    service_needed: lead.service_needed || lead.situation,
+    serviceneeded: lead.service_needed || lead.situation,
+    preferred_timeline: lead.preferred_timeline || lead.timeline,
+    preferredtimeline: lead.preferred_timeline || lead.timeline,
+    message: lead.message || lead.notes,
+    notes: lead.notes || lead.message,
+    property_address: lead.property_address,
+    street_address: lead.property_address,
+    property_city: lead.property_city,
+    city: lead.property_city,
+    property_condition: lead.property_condition,
+  };
+
+  return aliases[fieldKey] ?? aliases[fieldKey.replace(/-/g, "_")];
+}
+
+function getSubmittedValue(lead: LeadRow, fieldKey: string) {
+  const customFields = lead.custom_fields || {};
+  const candidates = [fieldKey, toCamelCase(fieldKey), fieldKey.replace(/-/g, "_")];
+
+  for (const key of candidates) {
+    const value = customFields[key];
+    if (value !== undefined && value !== null && String(value).trim()) {
+      return String(value);
+    }
+  }
+
+  const canonical = getCanonicalValue(lead, fieldKey.toLowerCase());
+  return canonical ? String(canonical) : "";
+}
+
 function buildLeadEmail({
   lead,
   businessName,
+  formFields,
 }: {
   lead: LeadRow;
   businessName?: string | null;
+  formFields: FormField[];
 }) {
   const appUrl = getAppUrl();
   const leadUrl = `${appUrl}/client/leads/${lead.id}`;
   const adminLeadUrl = `${appUrl}/admin/leads/${lead.id}`;
   const safeBusinessName = textValue(businessName);
-  const subject = `New service inquiry: ${textValue(lead.name)}${lead.service_needed ? ` \u2014 ${lead.service_needed}` : ""}`;
+  const nameValue = getSubmittedValue(lead, "name") || lead.name || "";
+  const subject = `New service inquiry${nameValue ? `: ${nameValue}` : ""}`;
 
-  const rows = [
-    ["Name", lead.name],
-    ["Phone", lead.phone],
-    ["Email", lead.email],
-    ["Company", lead.company],
-    ["Service Needed", lead.service_needed || lead.situation],
-    ["Preferred Timeline", lead.preferred_timeline || lead.timeline],
-    ["Message", lead.message || lead.notes],
-    ["Legacy Property Address", lead.property_address],
-    ["Legacy Property City", lead.property_city],
-    ["Legacy Property Condition", lead.property_condition],
-    ["Source URL", lead.source_url],
-    ["Site ID", lead.site_id],
-    [
-      "Submitted",
-      lead.created_at
-        ? new Date(lead.created_at).toLocaleString("en-US", {
-            timeZone: "America/Chicago",
+  const rows =
+    formFields.length > 0
+      ? formFields
+          .map((field) => {
+            const key = String(field.field_key || "").trim();
+            if (!key) return null;
+            return [String(field.label || key), getSubmittedValue(lead, key)] as [
+              string,
+              string,
+            ];
           })
-        : null,
-    ],
-  ];
+          .filter((row): row is [string, string] => Boolean(row))
+      : [
+          ["Name", lead.name || ""],
+          ["Phone", lead.phone || ""],
+          ["Email", lead.email || ""],
+        ].filter(([, value]) => String(value || "").trim());
 
   const htmlRows = rows
     .map(
@@ -256,7 +320,8 @@ export async function sendLeadEmailNotification({
     businessName = data?.name || null;
   }
 
-  const email = buildLeadEmail({ lead, businessName });
+  const formFields = await getEnabledFormFields(supabase, lead.business_id);
+  const email = buildLeadEmail({ lead, businessName, formFields });
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
