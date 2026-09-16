@@ -41,7 +41,7 @@ export default async function AdminBusinessDetailPage({
     .maybeSingle();
   if (!business) notFound();
 
-  const [sitesResult, usersResult, leadsResult] = await Promise.all([
+  const [sitesResult, usersResult, leadsResult, settingsResult] = await Promise.all([
     supabase
       .from("widget_sites")
       .select(
@@ -62,11 +62,20 @@ export default async function AdminBusinessDetailPage({
       .eq("business_id", id)
       .order("created_at", { ascending: false })
       .limit(25),
+    supabase
+      .from("business_settings")
+      .select("lead_notification_email")
+      .eq("business_id", id)
+      .order("updated_at", { ascending: false })
+      .limit(1),
   ]);
 
   const sites = (sitesResult.data || []) as Array<any>;
   const users = (usersResult.data || []) as Array<any>;
   const leads = (leadsResult.data || []) as Array<any>;
+  const settings = Array.isArray(settingsResult.data)
+    ? settingsResult.data[0] || {}
+    : settingsResult.data || {};
   const planName = normalizePlanName(business.plan_name);
   const maxSites = business.max_widget_sites || maxWidgetSitesForPlan(planName);
 
@@ -154,6 +163,19 @@ export default async function AdminBusinessDetailPage({
                   defaultValue={business.email || ""}
                   className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3"
                 />
+              </label>
+              <label className="block text-sm font-semibold text-slate-700">
+                Lead Notification Email
+                <input
+                  name="lead_notification_email"
+                  type="text"
+                  defaultValue={settings.lead_notification_email || ""}
+                  placeholder="leads@example.com"
+                  className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3"
+                />
+                <span className="mt-1 block text-xs text-slate-500">
+                  Widget form submissions are emailed here. Separate multiple addresses with commas. If blank, emails go to active client logins.
+                </span>
               </label>
               <label className="block text-sm font-semibold text-slate-700">
                 Primary Market
