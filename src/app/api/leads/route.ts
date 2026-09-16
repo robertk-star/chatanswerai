@@ -105,6 +105,29 @@ async function insertLeadWithFallback(supabase: any, payload: Record<string, any
   return supabase.from("seller_leads").insert(safePayload).select("*").single();
 }
 
+async function recordEmailNotificationResult(
+  supabase: any,
+  leadId: string,
+  emailNotification: Record<string, unknown>,
+) {
+  try {
+    const sent = Boolean(emailNotification.sent);
+    await supabase
+      .from("seller_leads")
+      .update({
+        notification_sent_at: sent ? new Date().toISOString() : null,
+        notification_error: sent
+          ? null
+          : String(
+              emailNotification.error ||
+                emailNotification.reason ||
+                "Email notification was not sent.",
+            ).slice(0, 1000),
+      })
+      .eq("id", leadId);
+  } catch (_) {}
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => null);
@@ -213,6 +236,7 @@ export async function POST(request: Request) {
         skipped: emailResult.skipped,
         sent: emailResult.sent,
         recipients: emailResult.recipients,
+        fromEmail: emailResult.fromEmail || null,
         error: emailResult.error || null,
       };
 
@@ -220,12 +244,14 @@ export async function POST(request: Request) {
         console.log("Lead email notification sent", {
           leadId: lead.id,
           recipients: emailResult.recipients,
+          fromEmail: emailResult.fromEmail,
         });
       } else {
         console.warn("Lead email notification not sent", {
           leadId: lead.id,
           skipped: emailResult.skipped,
           recipients: emailResult.recipients,
+          fromEmail: emailResult.fromEmail,
           error: emailResult.error,
         });
       }
@@ -240,6 +266,8 @@ export async function POST(request: Request) {
       };
       console.error("Lead email notification failed", errorMessage);
     }
+
+    await recordEmailNotificationResult(supabase, lead.id, emailNotification);
 
     try {
       const payload = buildLeadWebhookPayload(lead, "seller_lead.created");
