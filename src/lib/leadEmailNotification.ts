@@ -75,6 +75,40 @@ function getAppUrl() {
   }
 }
 
+async function getBusinessNotificationEmails(
+  supabase: SupabaseClientLike,
+  businessId: string,
+) {
+  const { data, error } = await supabase
+    .from("business_settings")
+    .select("lead_notification_email")
+    .eq("business_id", businessId)
+    .order("updated_at", { ascending: false })
+    .limit(1);
+
+  if (error) return [];
+
+  const row = Array.isArray(data) ? data[0] : data;
+  return splitEmails(row?.lead_notification_email);
+}
+
+async function getActiveClientUserEmails(
+  supabase: SupabaseClientLike,
+  businessId: string,
+) {
+  const { data, error } = await supabase
+    .from("business_users")
+    .select("email, is_active")
+    .eq("business_id", businessId)
+    .eq("is_active", true);
+
+  if (error) return [];
+
+  return (data || []).flatMap((user: { email?: string | null }) =>
+    splitEmails(user.email),
+  );
+}
+
 async function getLeadNotificationRecipients(
   supabase: SupabaseClientLike,
   businessId?: string | null,
@@ -83,19 +117,16 @@ async function getLeadNotificationRecipients(
 
   if (!businessId) return uniqueEmails(envRecipients);
 
-  const { data, error } = await supabase
-    .from("business_users")
-    .select("email, is_active")
-    .eq("business_id", businessId)
-    .eq("is_active", true);
+  const settingsRecipients = await getBusinessNotificationEmails(
+    supabase,
+    businessId,
+  );
 
-  if (error) {
-    return uniqueEmails(envRecipients);
+  if (settingsRecipients.length > 0) {
+    return uniqueEmails([...settingsRecipients, ...envRecipients]);
   }
 
-  const clientRecipients = (data || []).flatMap(
-    (user: { email?: string | null }) => splitEmails(user.email),
-  );
+  const clientRecipients = await getActiveClientUserEmails(supabase, businessId);
   return uniqueEmails([...clientRecipients, ...envRecipients]);
 }
 

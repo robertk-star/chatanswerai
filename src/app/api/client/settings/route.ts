@@ -58,6 +58,7 @@ export async function POST(request: Request) {
   const customAiInstructions = value(formData, "custom_ai_instructions");
   const importantDisclaimersOrLimits = value(formData, "important_disclaimers_or_limits");
   const chatCtaText = value(formData, "chat_cta_text");
+  const leadNotificationEmail = value(formData, "lead_notification_email");
   const widgetTitle = value(formData, "widget_title") || "Service Inquiry Assistant";
   const widgetSubtitle = value(formData, "widget_subtitle") || "Answers questions and collects service inquiries";
   const widgetWelcomeMessage = value(formData, "widget_welcome_message") || "Hi! I can answer questions about this business and help collect a service inquiry. What can I help you with today?";
@@ -105,6 +106,7 @@ export async function POST(request: Request) {
     custom_ai_instructions: customAiInstructions,
     important_disclaimers_or_limits: importantDisclaimersOrLimits,
     chat_cta_text: chatCtaText,
+    lead_notification_email: leadNotificationEmail,
     widget_title: widgetTitle,
     widget_subtitle: widgetSubtitle,
     widget_welcome_message: widgetWelcomeMessage,
