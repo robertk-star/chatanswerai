@@ -160,6 +160,28 @@ export default async function ClientSettingsPage({
           </div>
 
           <div className="rounded-[2rem] bg-white p-6 shadow-soft ring-1 ring-slate-200">
+            <h2 className="text-xl font-bold text-navy">Lead Notifications</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Choose who receives an email when a visitor submits the widget form. This does not create a login.
+            </p>
+            <div className="mt-6 grid gap-4">
+              <label className="block text-sm font-semibold text-slate-700">
+                Lead Notification Email
+                <input
+                  name="lead_notification_email"
+                  type="text"
+                  defaultValue={settings.lead_notification_email || ""}
+                  placeholder="leads@example.com"
+                  className="mt-1 w-full rounded-xl border border-slate-300 px-4 py-3"
+                />
+                <span className="mt-1 block text-xs text-slate-500">
+                  Separate multiple addresses with commas. If this is blank, emails go to every active client login for this business.
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] bg-white p-6 shadow-soft ring-1 ring-slate-200">
             <h2 className="text-xl font-bold text-navy">Widget</h2>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <label className="block text-sm font-semibold text-slate-700">
